@@ -1,0 +1,76 @@
+#/* ***** BEGIN LICENSE BLOCK *****
+# * Version: MPL 1.1
+# * Copyright (C) 2011- Dave Parfitt. All Rights Reserved.
+# *
+# * The contents of this file are subject to the Mozilla Public License Version
+# * 1.1 (the "License"); you may not use this file except in compliance with
+# * the License. You may obtain a copy of the License at
+# * http://www.mozilla.org/MPL/
+# *
+# * Software distributed under the License is distributed on an "AS IS" basis,
+# * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# * for the specific language governing rights and limitations under the
+# * License.
+# *
+# * ***** END LICENSE BLOCK ***** */
+
+
+
+
+task :default => [:jar]
+
+JAVA_HOME=ENV['JAVA_HOME']
+JAVAC = "javac"
+JAR = "jar"
+
+sources = FileList['src/**/*.java']
+classes = sources.ext('class')
+jars = FileList['javalibs/**/*.jar']
+
+desc "Compiles all Java sources files in the project"
+task :compile => sources do
+
+  begin
+    mkdir "dist"
+  rescue
+    ""
+  end
+  
+  # see the javac command line docs regarding @ syntax for javac
+  File.open("javac.classes","w+") do |f|
+    sources.each {|t| f.puts "#{t}" }
+  end
+
+  File.open("javac.options","w+") do |f|
+    f.puts "-d dist"
+    f.puts "-g"
+    f.puts '-sourcepath src'
+  end
+  cp = jars.join(";")
+  command =<<EOF
+#{JAVAC} -J-Xms256m -J-Xmx256m -classpath #{cp} @javac.options @javac.classes
+EOF
+  sh command
+end
+
+task :jar => :compile do
+  puts "Building Jar"
+  cd "dist"  
+  sh "#{JAR} xf ../javalibs/javassist.jar"
+  cd '..'
+  cp('./javalibs/Javassist_Readme.html','./dist')
+  cp('License.html','./dist')
+  cd "dist"  
+  begin	
+  	mkdir "META-INF"
+  rescue	
+    puts ""
+  end		
+  cp('../MANIFEST.MF', 'META-INF')
+
+  sh "#{JAR} cfm ../Hacksaw.jar ./META-INF/MANIFEST.MF *"
+end
+
+task :clean do
+  rmtree 'dist'
+end

@@ -1,0 +1,3 @@
+-d dist
+-g
+-sourcepath src
