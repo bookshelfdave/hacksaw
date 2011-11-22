@@ -18,7 +18,6 @@ module Hack
     end
   end
   
-  
   class AddLineAction < MethodAction
     attr_accessor :methodname, :sig, :line
 

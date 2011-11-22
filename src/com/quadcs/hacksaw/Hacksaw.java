@@ -19,7 +19,11 @@ import java.io.ByteArrayInputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javassist.ClassPool;
@@ -29,8 +33,8 @@ import javassist.CtMethod;
 public class Hacksaw implements ClassFileTransformer {
 
     private static Set<ClassModification> listeners = new HashSet<ClassModification>();
-    public static boolean DEBUG = false;
-
+    public static boolean DEBUG = false;    
+    
     public static void registerMod(ClassModification cl) {
         if (DEBUG) {
             System.out.println("Registering Hacksaw Listener:" + cl.getClass().getName());
@@ -38,6 +42,7 @@ public class Hacksaw implements ClassFileTransformer {
         listeners.add(cl);
     }
 
+    @Override
     public byte[] transform(ClassLoader loader, String className,
             Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
             byte[] classfileBuffer) throws IllegalClassFormatException {
@@ -46,16 +51,53 @@ public class Hacksaw implements ClassFileTransformer {
         }
         String theClass = className.replace("/", ".");
         for (ClassModification l : listeners) {
-            if (l.getClassMatcher().matchClass(theClass)) {
+            if (l.getClassMatcher().matchClass(theClass)) {                                               
                 try {
                     ClassPool cp = ClassPool.getDefault();
                     CtClass klass = cp.makeClass(new ByteArrayInputStream(classfileBuffer));
+                    
+                    CtMethod methods[] = klass.getMethods();
+                    // load all methods
+                    Map<String,List<String>> methodDescriptors = new HashMap<String,List<String>>();
+                
+                    for(CtMethod method: methods) {
+                        if(!methodDescriptors.containsKey(method.getName())) {
+                           methodDescriptors.put(method.getName(),new ArrayList<String>());
+                        }
+                        methodDescriptors.get(method.getName()).add(method.getMethodInfo().getDescriptor());
+                    }
+                    
+                    
                     for (ClassAction ca : l.getClassActions()) {
                         ca.exec(klass);
                     }
                     for (MethodAction ma : l.getMethodActions()) {
-                        CtMethod m = klass.getMethod(ma.getMethodname(), ma.getSig());
-                        ma.exec(m);
+                        // make sure the method exists
+                        if(methodDescriptors.containsKey(ma.getMethodname())) {
+                            if(methodDescriptors.get(ma.getMethodname()).size() > 1) {
+                                if(ma.getSig() != null || !ma.getSig().equals("")) {
+                                    CtMethod m = klass.getMethod(ma.getMethodname(), ma.getSig());
+                                    ma.exec(m);
+                                } else {
+                                    for(String desc: methodDescriptors.get(ma.getMethodname())) {
+                                        CtMethod m = klass.getMethod(ma.getMethodname(), desc);
+                                        ma.exec(m);
+                                    }    
+                                }                                
+                            } else {
+                                if(ma.getSig() != null || !ma.getSig().equals("")) {
+                                    CtMethod m = klass.getMethod(ma.getMethodname(), ma.getSig());
+                                    ma.exec(m);
+                                } else {
+                                    String desc = methodDescriptors.get(ma.getMethodname()).get(0);
+                                    CtMethod m = klass.getMethod(ma.getMethodname(), desc);
+                                    ma.exec(m);
+                                }
+                            }
+                        } else {
+                            System.err.println("Hacksaw: Method not found:" + ma.getMethodname() + " -> " + ma.getSig());
+                            continue;
+                        }                                                
                     }
 
                     byte[] b = klass.toBytecode();

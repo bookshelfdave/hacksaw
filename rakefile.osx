@@ -29,7 +29,13 @@ jars = FileList['javalibs/**/*.jar']
 
 desc "Compiles all Java sources files in the project"
 task :compile => sources do
-
+  
+  begin
+    rmdir "dist"  
+  rescue
+    puts "dist does not exists."
+  end
+  
   begin
     mkdir "dist"
   rescue
