@@ -29,12 +29,14 @@ import java.util.Set;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
+import javassist.NotFoundException;
 
 public class Hacksaw implements ClassFileTransformer {
 
     private static Set<ClassModification> listeners = new HashSet<ClassModification>();
     public static boolean DEBUG = false;    
-    
+
+ 
     public static void registerMod(ClassModification cl) {
         if (DEBUG) {
             System.out.println("Registering Hacksaw Listener:" + cl.getClass().getName());
@@ -46,68 +48,93 @@ public class Hacksaw implements ClassFileTransformer {
     public byte[] transform(ClassLoader loader, String className,
             Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
             byte[] classfileBuffer) throws IllegalClassFormatException {
-        if (DEBUG) {
-            System.out.println("Hacksaw:" + className);
-        }
+        
         String theClass = className.replace("/", ".");
+        if (DEBUG) {
+            System.out.println("Hacksaw:" + theClass);
+        }
+        
+        
         for (ClassModification l : listeners) {
             if (l.getClassMatcher().matchClass(theClass)) {                                               
                 try {
                     ClassPool cp = ClassPool.getDefault();
                     CtClass klass = cp.makeClass(new ByteArrayInputStream(classfileBuffer));
                     
-                    CtMethod methods[] = klass.getMethods();
+                    CtMethod methods[] = klass.getDeclaredMethods();
                     // load all methods
                     Map<String,List<String>> methodDescriptors = new HashMap<String,List<String>>();
-                
-                    for(CtMethod method: methods) {
-                        if(!methodDescriptors.containsKey(method.getName())) {
-                           methodDescriptors.put(method.getName(),new ArrayList<String>());
-                        }
-                        methodDescriptors.get(method.getName()).add(method.getMethodInfo().getDescriptor());
-                    }
                     
-                    
-                    for (ClassAction ca : l.getClassActions()) {
-                        ca.exec(klass);
-                    }
-                    for (MethodAction ma : l.getMethodActions()) {
-                        // make sure the method exists
-                        if(methodDescriptors.containsKey(ma.getMethodname())) {
-                            if(methodDescriptors.get(ma.getMethodname()).size() > 1) {
-                                if(ma.getSig() != null || !ma.getSig().equals("")) {
-                                    CtMethod m = klass.getMethod(ma.getMethodname(), ma.getSig());
-                                    ma.exec(m);
-                                } else {
-                                    for(String desc: methodDescriptors.get(ma.getMethodname())) {
-                                        CtMethod m = klass.getMethod(ma.getMethodname(), desc);
-                                        ma.exec(m);
-                                    }    
-                                }                                
-                            } else {
-                                if(ma.getSig() != null || !ma.getSig().equals("")) {
-                                    CtMethod m = klass.getMethod(ma.getMethodname(), ma.getSig());
-                                    ma.exec(m);
-                                } else {
-                                    String desc = methodDescriptors.get(ma.getMethodname()).get(0);
-                                    CtMethod m = klass.getMethod(ma.getMethodname(), desc);
-                                    ma.exec(m);
-                                }
-                            }
-                        } else {
-                            System.err.println("Hacksaw: Method not found:" + ma.getMethodname() + " -> " + ma.getSig());
-                            continue;
-                        }                                                
-                    }
+                  
+                    loadDescriptors(methods, methodDescriptors);
+                    processClass(l, klass);
+                    processMethods(l, methodDescriptors, klass);
 
                     byte[] b = klass.toBytecode();
                     klass.detach();
                     return b;
-                } catch (Exception e) {
+                } catch (Exception e) {                   
                     e.printStackTrace();
                 }
             }
         }
         return classfileBuffer;
+    }
+
+    private void loadDescriptors(CtMethod[] methods, Map<String, List<String>> methodDescriptors) {
+        System.out.println("Loading descriptors");
+        for(CtMethod method: methods) {
+            if(!methodDescriptors.containsKey(method.getName())) {
+               methodDescriptors.put(method.getName(),new ArrayList<String>());
+               System.out.println("Adding " + method.getName());
+            }
+            methodDescriptors.get(method.getName()).add(method.getMethodInfo().getDescriptor());
+            System.out.println("Adding " + method.getName() + " " + method.getMethodInfo().getDescriptor());
+        }
+    }
+
+    private void processClass(ClassModification l, CtClass klass) {
+        for (ClassAction ca : l.getClassActions()) {
+            ca.exec(klass);
+        }
+    }
+
+    private void processMethods(ClassModification l, Map<String, List<String>> methodDescriptors, CtClass klass) throws NotFoundException {
+        for (MethodAction ma : l.getMethodActions()) {
+            // make sure the method exists
+            if(methodDescriptors.containsKey(ma.getMethodname())) {
+               
+                if(methodDescriptors.get(ma.getMethodname()).size() > 1) {
+                   
+                    if(ma.getSig() != null && !ma.getSig().equals("")) {
+                       
+                        CtMethod m = klass.getMethod(ma.getMethodname(), ma.getSig());
+                        
+                        ma.exec(m);
+                    } else {
+                        
+                        for(String desc: methodDescriptors.get(ma.getMethodname())) {
+                            CtMethod m = klass.getMethod(ma.getMethodname(), desc);
+                            ma.exec(m);
+                        }    
+                    }                                
+                } else {
+                    
+                    if(ma.getSig() != null && !ma.getSig().equals("")) {
+                        
+                        CtMethod m = klass.getMethod(ma.getMethodname(), ma.getSig());
+                        ma.exec(m);
+                    } else {
+                       
+                        String desc = methodDescriptors.get(ma.getMethodname()).get(0);
+                        CtMethod m = klass.getMethod(ma.getMethodname(), desc);
+                        ma.exec(m);
+                    }
+                }
+            } else {
+                System.err.println("Hacksaw: Method not found:" + ma.getMethodname() + " -> " + ma.getSig());
+                continue;
+            }                                                
+        }
     }
 }

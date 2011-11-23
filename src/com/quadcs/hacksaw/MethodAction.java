@@ -2,7 +2,7 @@ package com.quadcs.hacksaw;
 
 import javassist.CtMethod;
 
-public abstract class MethodAction {
+public class MethodAction {
 	protected String methodname;
 	protected String sig;
 	
@@ -28,5 +28,7 @@ public abstract class MethodAction {
 		this.methodname = methodname;
 	}
 
-	public abstract void exec(CtMethod c);
+	public void exec(CtMethod c) {
+            
+        }
 }

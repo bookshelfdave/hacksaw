@@ -14,25 +14,26 @@ module Hack
       @classname=classname
     end
     def matchClass(classname)
-      @classname = classname
+      @classname == classname
     end
   end
   
   class AddLineAction < MethodAction
-    attr_accessor :methodname, :sig, :line
-
-    def initialize(methodname, line, sig="") 
-      @methodname = methodname
-      @sig = sig
+    attr_accessor :line
+    
+    def initialize(methodname, line, sig=nil) 
+      super(methodname,sig)
       @line = line
     end
   end
 
   class AddLineAfterMethod < AddLineAction
+    def initialize(methodname, line, sig=nil) 
+      super(methodname,line,sig)
+    end
     def exec(c)
       begin
-        puts "Exec"
-        c.insertBefore(line)
+        c.insertAfter(line)
       rescue
         puts "Busted!"
       end
@@ -41,9 +42,13 @@ module Hack
 
 
   class AddLineBeforeMethod < AddLineAction
+    def initialize(methodname, line, sig=nil) 
+      super(methodname,line,sig)
+    end
+
     def exec(c)
       begin
-        c.insertAfter(line)
+        c.insertBefore(line)
       rescue
         puts "Busted!"
       end
@@ -63,7 +68,7 @@ module Hack
     c.getMethodActions().add(a)
   end
 
-  def add_before(params)
+  def add_before(params)  
     c = params[:of]
     a = AddLineBeforeMethod.new(params[:method].to_s,params[:line])
     c.getMethodActions().add(a)
@@ -73,19 +78,19 @@ module Hack
     cm = SingleClassMatcher.new(classname)
     c = ClassModification.new(cm)
     yield(c) if block_given?
-    c.getMethodActions().each do |m|
-      puts "Running action #{m}"
-    end
+    #c.getMethodActions().each do |m|
+    #  puts "Running action #{m}"
+    #end
     Hacksaw.registerMod(c)
   end
 end
 
 include Hack
-Hacksaw.DEBUG=true
 modify_class "com.quadcs.hacksaw.tests.Foo" do |c| 
-  add_after  :method=>"getX",  :of=>c, :line=>%{System.out.println("Bye");}
-  add_before :method=>:getX,   :of=>c, :line=>%{System.out.println("Hi");}  
+  add_before :method=>:foo,   :of=>c, :line=>%{System.out.println("Hi");}  
+  add_after  :method=>"foo",  :of=>c, :line=>%{System.out.println("Goodbye");}
 end
 
+#Hacksaw.DEBUG=true
 test = com.quadcs.hacksaw.tests.Foo.new()
-puts test.getX()
+puts test.foo()

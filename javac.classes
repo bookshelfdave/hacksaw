@@ -5,7 +5,5 @@ src/com/quadcs/hacksaw/Hacksaw.java
 src/com/quadcs/hacksaw/Main.java
 src/com/quadcs/hacksaw/MethodAction.java
 src/com/quadcs/hacksaw/Utils.java
-src/com/quadcs/hacksaw/actions/AddLineBeforeMethod.java
 src/com/quadcs/hacksaw/tests/Bar.java
 src/com/quadcs/hacksaw/tests/Foo.java
-src/com/quadcs/hacksaw/tests/Test.java

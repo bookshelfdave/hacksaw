@@ -5,7 +5,8 @@ import java.lang.instrument.Instrumentation;
 public class Main {	
 	public static final String version = "0.2 \"XYZ\"";
 	public static Instrumentation sys;
-	public static void premain(String agentArgs, Instrumentation inst) {
+
+        public static void premain(String agentArgs, Instrumentation inst) {
 		System.out.println("--------------------------------------------------------------");
 		System.out.println("Hacksaw V" + version);
 		System.out.println("* Copyright (C) 2011- Dave Parfitt. All Rights Reserved.");
@@ -21,4 +22,7 @@ public class Main {
 		sys = inst;
 		sys.addTransformer(new Hacksaw());		
 	}
+
+    
+        
 }
