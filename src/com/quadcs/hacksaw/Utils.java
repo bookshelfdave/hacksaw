@@ -18,25 +18,25 @@ package com.quadcs.hacksaw;
 import java.io.File;
 import java.io.FileInputStream;
 
-
 public class Utils {
-	public static byte[] getFileBytes(File f) throws Exception {
-	    FileInputStream fis = new FileInputStream(f);
-	    // unsafe cast to int :-(
-	    byte[] bytes = new byte[(int)f.length()];
 
-	    int offset = 0;
-	    int bytesRead = 0;
-	    while (offset < bytes.length && 
-	    		(bytesRead = fis.read(bytes, offset, bytes.length-offset)) >= 0) {
-	        offset += bytesRead;
-	    }
+    public static byte[] getFileBytes(File f) throws Exception {
+        FileInputStream fis = new FileInputStream(f);
+        // unsafe cast to int :-(
+        byte[] bytes = new byte[(int) f.length()];
 
-	    if (offset < bytes.length) {
-	        throw new Exception("Error reading file "+f.getName());
-	    }
-	    
-	    fis.close();
-	    return bytes;
-	}	
+        int offset = 0;
+        int bytesRead = 0;
+        while (offset < bytes.length
+                && (bytesRead = fis.read(bytes, offset, bytes.length - offset)) >= 0) {
+            offset += bytesRead;
+        }
+
+        if (offset < bytes.length) {
+            throw new Exception("Error reading file " + f.getName());
+        }
+
+        fis.close();
+        return bytes;
+    }
 }

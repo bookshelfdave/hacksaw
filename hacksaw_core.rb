@@ -1,12 +1,15 @@
 include Java
 require 'Hacksaw.jar'
-include_class Java::com.quadcs.hacksaw.Hacksaw
+include_class Java::com.quadcs.hacksaw.Main
 include_class Java::com.quadcs.hacksaw.MethodAction
+include_class Java::com.quadcs.hacksaw.FieldAction
 include_class Java::com.quadcs.hacksaw.ClassMatcher
 include_class Java::com.quadcs.hacksaw.ClassModification
 
-module Hack
+
+module Hacksaw
   
+
   class SingleClassMatcher
     include ClassMatcher
     attr_accessor :classname
@@ -16,6 +19,32 @@ module Hack
     def matchClass(classname)
       @classname == classname
     end
+  end
+
+  #  public static final int	ABSTRACT	1024
+#  public static final int	ANNOTATION	8192
+#  public static final int	ENUM	16384
+#  public static final int	FINAL	16
+#  public static final int	INTERFACE	512
+#  public static final int	NATIVE	256
+#  public static final int	PRIVATE	2
+#  public static final int	PROTECTED	4
+#  public static final int	PUBLIC	1
+#  public static final int	STATIC	8
+#  public static final int	STRICT	2048
+#  public static final int	SYNCHRONIZED	32
+#  public static final int	TRANSIENT	128
+#  public static final int	VARARGS	128
+#  public static final int	VOLATILE	64
+
+  
+  class ChangeFieldModifiers < FieldAction
+    attr_accessor :mods
+    def initialize(fieldname,*mods)
+      super(fieldname)
+      
+    end
+    
   end
   
   class AddLineAction < MethodAction
@@ -81,16 +110,16 @@ module Hack
     #c.getMethodActions().each do |m|
     #  puts "Running action #{m}"
     #end
-    Hacksaw.registerMod(c)
+    HacksawMain.registerMod(c)
   end
 end
 
-include Hack
+include Hacksaw
 modify_class "com.quadcs.hacksaw.tests.Foo" do |c| 
   add_before :method=>:foo,   :of=>c, :line=>%{System.out.println("Hi");}  
   add_after  :method=>"foo",  :of=>c, :line=>%{System.out.println("Goodbye");}
 end
 
-#Hacksaw.DEBUG=true
+#HacksawMain.DEBUG=true
 test = com.quadcs.hacksaw.tests.Foo.new()
 puts test.foo()
