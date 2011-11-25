@@ -1,10 +1,10 @@
 src/com/quadcs/hacksaw/ClassAction.java
 src/com/quadcs/hacksaw/ClassMatcher.java
 src/com/quadcs/hacksaw/ClassModification.java
-src/com/quadcs/hacksaw/DecTests.java
-src/com/quadcs/hacksaw/Hacksaw.java
+src/com/quadcs/hacksaw/FieldAction.java
 src/com/quadcs/hacksaw/HacksawMain.java
 src/com/quadcs/hacksaw/MethodAction.java
 src/com/quadcs/hacksaw/Utils.java
 src/com/quadcs/hacksaw/tests/Bar.java
+src/com/quadcs/hacksaw/tests/DecTests.java
 src/com/quadcs/hacksaw/tests/Foo.java

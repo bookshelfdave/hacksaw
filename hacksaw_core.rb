@@ -1,6 +1,6 @@
 include Java
 require 'Hacksaw.jar'
-include_class Java::com.quadcs.hacksaw.Main
+include_class Java::com.quadcs.hacksaw.HacksawMain
 include_class Java::com.quadcs.hacksaw.MethodAction
 include_class Java::com.quadcs.hacksaw.FieldAction
 include_class Java::com.quadcs.hacksaw.ClassMatcher
@@ -20,31 +20,36 @@ module Hacksaw
       @classname == classname
     end
   end
-
-  #  public static final int	ABSTRACT	1024
-#  public static final int	ANNOTATION	8192
-#  public static final int	ENUM	16384
-#  public static final int	FINAL	16
-#  public static final int	INTERFACE	512
-#  public static final int	NATIVE	256
-#  public static final int	PRIVATE	2
-#  public static final int	PROTECTED	4
-#  public static final int	PUBLIC	1
-#  public static final int	STATIC	8
-#  public static final int	STRICT	2048
-#  public static final int	SYNCHRONIZED	32
-#  public static final int	TRANSIENT	128
-#  public static final int	VARARGS	128
-#  public static final int	VOLATILE	64
-
   
   class ChangeFieldModifiers < FieldAction
     attr_accessor :mods
-    def initialize(fieldname,*mods)
+    
+    @@modvals = { :Abstract=>1024, 
+                  :Annotation=>8192, 
+                  :Enum=>16384,
+                  :Final=>16,
+                  :Interface=>512,
+                  :Native=>256,
+                  :Private=>2,
+                  :Protected=>4,
+                  :Public=>1,
+                  :Static=>8,
+                  :Strict=>2048,
+                  :Synchronized=>32,
+                  :Transient=>128, # is 128 correct for transient AND vararge
+                  :Varargs=>128,
+                  :Volatile=>64
+                }
+    
+    def initialize(fieldname,mods)
       super(fieldname)
-      
+      @mods = mods
     end
     
+    def exec(fm)
+      ord = @mods.map {|m| @@modvals[m]}.reduce(:|)
+      fm.setModifiers(ord)
+    end
   end
   
   class AddLineAction < MethodAction
@@ -112,14 +117,25 @@ module Hacksaw
     #end
     HacksawMain.registerMod(c)
   end
+  
+  def modify_field(params)
+    c = params[:of]
+    m = params[:modifiers]
+    field = params[:field]
+    cm = ChangeFieldModifiers.new(field.to_s,m)
+    c.getFieldActions().add(cm)
+  end
 end
 
 include Hacksaw
+
+
 modify_class "com.quadcs.hacksaw.tests.Foo" do |c| 
-  add_before :method=>:foo,   :of=>c, :line=>%{System.out.println("Hi");}  
-  add_after  :method=>"foo",  :of=>c, :line=>%{System.out.println("Goodbye");}
+  add_before    :method=>:foo,   :of=>c, :line=>%{System.out.println("Hi");}  
+  add_after     :method=>"foo",  :of=>c, :line=>%{System.out.println("Goodbye");}
+  modify_field  :field=>"x",     :of=>c, :modifiers=>[:Public]
 end
 
 #HacksawMain.DEBUG=true
 test = com.quadcs.hacksaw.tests.Foo.new()
-puts test.foo()
+test.x="Post"

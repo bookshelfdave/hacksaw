@@ -89,17 +89,7 @@ public class HacksawMain implements ClassFileTransformer {
 
 
                     processClass(l, klass);
-
-                    // TODO: Need a set of declared AND non-declared fields
-                    for (CtField field : klass.getFields()) {
-                        for(FieldAction fa: l.getFieldActions()) {
-                            // TODO: Should I be using equalsIgnoreCase here?
-                            if(fa.getFieldName().equalsIgnoreCase(field.getName())) {
-                                fa.exec(field);
-                            }
-                        }
-                    }
-
+                    processFields(klass, l);
                     processMethods(l, methodDescriptors, klass);
 
                     byte[] b = klass.toBytecode();
@@ -111,6 +101,18 @@ public class HacksawMain implements ClassFileTransformer {
             }
         }
         return classfileBuffer;
+    }
+
+    private void processFields(CtClass klass, ClassModification l) {
+        // TODO: Need a set of declared AND non-declared fields
+        for (CtField field : klass.getDeclaredFields()) {
+            for(FieldAction fa: l.getFieldActions()) {
+                // TODO: Should I be using equalsIgnoreCase here?
+                if(fa.getFieldName().equalsIgnoreCase(field.getName())) {                
+                    fa.exec(field);
+                }
+            }
+        }
     }
 
     private void loadDescriptors(CtMethod[] methods, Map<String, List<String>> methodDescriptors) {
