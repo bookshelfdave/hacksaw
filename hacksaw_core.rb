@@ -4,12 +4,54 @@ include_class Java::com.quadcs.hacksaw.HacksawMain
 include_class Java::com.quadcs.hacksaw.MethodAction
 include_class Java::com.quadcs.hacksaw.FieldAction
 include_class Java::com.quadcs.hacksaw.ClassMatcher
+include_class Java::com.quadcs.hacksaw.MethodMatcher
 include_class Java::com.quadcs.hacksaw.ClassModification
 
 
-module Hacksaw
-  
+include_class Java::javassist.ClassPool
+include_class Java::javassist.CtClass
+include_class Java::javassist.bytecode.Descriptor
 
+
+module Hacksaw
+    
+  class SingleMethodNameMatcher
+    include MethodMatcher
+    attr_accessor :methodname
+    def initialize(name)
+      @methodname = name
+    end
+    def matchMethod(method, sig)
+      # this WILL match all methods with the same name in a class
+      method == @methodname
+    end
+  end
+  
+  class RegexMethodNameMatcher
+    include MethodMatcher
+    attr_accessor :regex
+    def initialize(regex)
+      @regex = regex
+    end
+    def matchMethod(method, sig)
+        @regex.match(method) 
+    end
+  end
+
+  class ListMethodNameMatcher
+    include MethodMatcher
+    attr_accessor :l
+    def initialize(methodlist)
+      @l = methodlist
+    end
+    def matchMethod(method, sig)
+      @l.include? method
+    end
+  end
+
+ 
+  
+  
   class SingleClassMatcher
     include ClassMatcher
     attr_accessor :classname
@@ -36,7 +78,7 @@ module Hacksaw
                   :Static=>8,
                   :Strict=>2048,
                   :Synchronized=>32,
-                  :Transient=>128, # is 128 correct for transient AND vararge
+                  :Transient=>128, # is 128 correct for transient AND varargs?
                   :Varargs=>128,
                   :Volatile=>64
                 }
@@ -130,12 +172,52 @@ end
 include Hacksaw
 
 
-modify_class "com.quadcs.hacksaw.tests.Foo" do |c| 
-  add_before    :method=>:foo,   :of=>c, :line=>%{System.out.println("Hi");}  
-  add_after     :method=>"foo",  :of=>c, :line=>%{System.out.println("Goodbye");}
-  modify_field  :field=>"x",     :of=>c, :modifiers=>[:Public]
-end
+#modify_class "com.quadcs.hacksaw.tests.Foo" do |c| 
+#  add_before    :method=>:foo,   :of=>c, :line=>%{System.out.println("Hi");}  
+#  add_after     :method=>"foo",  :of=>c, :line=>%{System.out.println("Goodbye");}
+#  modify_field  :field=>"x",     :of=>c, :modifiers=>[:Public]
+#end
+#
+#
+#modify_class "com.quadcs.hacksaw.tests.Foo" do |c| 
+#  modify_method "foo", :of=>c do |m|
+#    add_before    :method=>:foo,   :of=>c, :line=>%{System.out.println("Hi");}  
+#    add_after     :method=>"foo",  :of=>c, :line=>%{System.out.println("Goodbye");}
+#  end
+# 
+#  modify_field "x", :of=>c do |f|
+#  end
+#  
+#  modify_field  :field=>"x",     :of=>c, :modifiers=>[:Public]
+#end
+#
+#
+#
+#modify_class "com.quadcs.hacksaw.tests.Foo" do |c| 
+#  add_before_method :name=>"foo"
+#  add_after_method :name=>/[a-zA-Z0-9_]/ 
+#  
+#  #modify_method
+#  #modify_field "x", :of=>c, :modifiers=>[:Public]
+#  #modify_constructor
+#end  
+
+
+#modify :class=>"com.quadcs.hacksaw.tests.Foo" do |c|
+#  modify :method=>"Foo", :of=>c, :add_line_before=>"System.out.println(1000);"
+#  modify :field=>"x", :of=>c, :modifiers=>[:Public]  
+#  modify :constructor, :of=>c, 
+#end
+
 
 #HacksawMain.DEBUG=true
 test = com.quadcs.hacksaw.tests.Foo.new()
-test.x="Post"
+#test.x="Post"
+
+def test_regex(params)
+  obj = params[:name]  
+  case obj 
+    when String then puts "String"
+    when Regexp then 
+  end
+end

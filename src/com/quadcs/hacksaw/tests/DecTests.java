@@ -21,7 +21,8 @@ public class DecTests {
         CtClass klass = cp.getCtClass("java.lang.String");
         
         CtClass[] foo = {klass};
-        System.out.println(Descriptor.ofMethod(CtClass.intType, foo).toString());
-        
+        //System.out.println(Descriptor.ofMethod(CtClass.intType, foo).toString());
+        String[] params = {"String"};
+        System.out.println(com.quadcs.hacksaw.Utils.makeDesc("String", params));
     }
 }

@@ -17,6 +17,11 @@ package com.quadcs.hacksaw;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.List;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.bytecode.Descriptor;
 
 public class Utils {
 
@@ -39,4 +44,33 @@ public class Utils {
         fis.close();
         return bytes;
     }
+
+    public static String makeDesc(String returnType, String[] params) throws Exception {
+        ClassPool cp = ClassPool.getDefault();
+        
+        List<CtClass> paramClasses = new ArrayList<CtClass>();
+        for(String p: params) {
+            CtClass klass;
+            try{
+               klass = cp.getCtClass(p);
+            } catch (Exception e) {
+                throw new Exception("Can't create descriptor: invalid paramter:" + p,e);
+            }
+            paramClasses.add(klass);
+        }
+        CtClass[] paramArray = new CtClass[paramClasses.size()];
+        paramArray = paramClasses.toArray(paramArray);        
+        CtClass returnClass;
+        
+        try{
+           returnClass = cp.getCtClass(returnType);
+        } catch (Exception e) {
+            throw new Exception("Can't create descriptor: invalid return type:" + returnType,e);
+        }
+
+        
+
+        return Descriptor.ofMethod(returnClass,paramArray);
+    }
+    
 }
