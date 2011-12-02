@@ -21,7 +21,6 @@ public class DescriptorTests {
     public void testDescWithVoidParams() throws Exception {
         String[] params = {};
         String desc = Utils.makeDesc("java.lang.String",params);
-        System.out.println(desc);
         assertEquals("()Ljava/lang/String;", desc);
     }
     
@@ -29,7 +28,6 @@ public class DescriptorTests {
     public void testDescWithVoidReturn() throws Exception {
         String[] params = {};
         String desc = Utils.makeDesc("void",params);
-        System.out.println(desc);
         assertEquals("()V", desc);
     }
     
@@ -37,7 +35,6 @@ public class DescriptorTests {
     public void testDescWithArrayReturn() throws Exception {
         String[] params = {};
         String desc = Utils.makeDesc("java.lang.String[]",params);
-        System.out.println(desc);
         assertEquals("()[Ljava/lang/String;", desc);
     }
      
@@ -45,10 +42,29 @@ public class DescriptorTests {
     public void testDescWithArrayParam() throws Exception {
         String[] params = {"int[]"};
         String desc = Utils.makeDesc("java.lang.String[]",params);
-        System.out.println(desc);
         assertEquals("([I)[Ljava/lang/String;", desc);
     }
     
-   
-    // TODO: TEST FAILURES!
+    
+    @Test
+    public void testParamFail() throws Exception {
+        String[] params = {"xyz"};
+        try {
+            String desc = Utils.makeDesc("java.lang.String[]",params);
+            fail("Invalid descriptor created");
+        } catch (Exception e) {
+            assertTrue("Check error message", e.getMessage().contains("invalid paramter:xyz"));                    
+        }
+    }
+    
+     @Test
+    public void testReturnTypeFail() throws Exception {
+        String[] params = {"int"};
+        try {
+            String desc = Utils.makeDesc("xyz",params);
+            fail("Invalid descriptor created");
+        } catch (Exception e) {
+            assertTrue("Check error message", e.getMessage().contains("invalid return type:xyz"));                    
+        }
+    }
 }
