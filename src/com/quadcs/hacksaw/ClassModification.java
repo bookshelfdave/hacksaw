@@ -24,7 +24,7 @@ public class ClassModification {
     // would these lists make more sense as maps...
     // or do they allow the user to add more than 1 mod for eatch type of action?
     private List<ClassAction> classActions = new ArrayList<ClassAction>();
-    private List<MethodAction> methodActions = new ArrayList<MethodAction>();
+    private List<MethodModification> methodModifications = new ArrayList<MethodModification>();
     private List<FieldModification> fieldModifications = new ArrayList<FieldModification>();
 
     public ClassModification(ClassMatcher cm) {
@@ -35,8 +35,8 @@ public class ClassModification {
         return classActions;
     }
 
-    public List<MethodAction> getMethodActions() {
-        return methodActions;
+    public List<MethodModification> getMethodModifications() {
+        return methodModifications;
     }
 
     public ClassMatcher getClassMatcher() {
