@@ -15,7 +15,9 @@
  * ***** END LICENSE BLOCK ***** */
 package com.quadcs.hacksaw;
 
+import javassist.CtClass;
+
 public interface ClassMatcher {
 
-    public boolean matchClass(String classname);
+    public boolean matchClass(String classname,CtClass c);
 }

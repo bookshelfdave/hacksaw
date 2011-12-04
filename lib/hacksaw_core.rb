@@ -23,8 +23,8 @@ module Hacksaw
     def initialize(&blk)
         @blk = blk
       end
-      def matchClass(classname)
-        @blk.call(classname)
+      def matchClass(classname,c)
+        @blk.call(classname,c)
       end
     end
 
@@ -176,9 +176,9 @@ module Hacksaw
     end
 
     matcher = case classes
-      when String then RubyClassMatcher.new { |name| name == classes}
-      when Regexp then RubyClassMatcher.new { |name| (name =~ classes) != nil }
-      when Array  then RubyClassMatcher.new { |name| classes.include?(name) }
+      when String then RubyClassMatcher.new { |name,cx| name == classes}
+      when Regexp then RubyClassMatcher.new { |name,cx| (name =~ classes) != nil }
+      when Array  then RubyClassMatcher.new { |name,cx| classes.include?(name) }
       else ClassMatcher.new { |name| false }  
     end
     
@@ -214,6 +214,8 @@ end
 include Hacksaw
 
 
+
+#modify :classes=>/com\.quadcs\.hacksaw\.tests\.*/,extends=>/com\.quadcs\.hacksaw\.tests\.*/ do |c|
 modify :classes=>/com\.quadcs\.hacksaw\.tests\.*/ do |c|
   c.modify :field=>"Foo", :type=>/java\.lang\.*/ do |f|
     f.change_modifiers [:Public]

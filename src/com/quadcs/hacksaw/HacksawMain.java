@@ -75,10 +75,13 @@ public class HacksawMain implements ClassFileTransformer {
         }
 
         for (ClassModification l : listeners) {
-            if (l.getClassMatcher().matchClass(theClass)) {
-                try {
-                    ClassPool cp = ClassPool.getDefault();
-                    CtClass klass = cp.makeClass(new ByteArrayInputStream(classfileBuffer));
+            ClassPool cp = ClassPool.getDefault();
+            try {
+                CtClass klass = cp.makeClass(new ByteArrayInputStream(classfileBuffer));
+                if (l.getClassMatcher().matchClass(theClass, klass)) {
+
+//                    ClassPool cp = ClassPool.getDefault();
+//                    CtClass klass = cp.makeClass(new ByteArrayInputStream(classfileBuffer));
 
                     // TODO: Need a set of declared AND non-declared methods
                     CtMethod methods[] = klass.getDeclaredMethods();
@@ -95,9 +98,10 @@ public class HacksawMain implements ClassFileTransformer {
                     byte[] b = klass.toBytecode();
                     klass.detach();
                     return b;
-                } catch (Exception e) {
-                    e.printStackTrace();
+
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         return classfileBuffer;
@@ -106,10 +110,10 @@ public class HacksawMain implements ClassFileTransformer {
     private void processFields(CtClass klass, ClassModification l) {
         // TODO: Need a set of declared AND non-declared fields
         for (CtField field : klass.getDeclaredFields()) {
-            for(FieldModification fm: l.getFieldModifications()) {
+            for (FieldModification fm : l.getFieldModifications()) {
                 // TODO: Should I be using equalsIgnoreCase here?               
-                if(fm.getFieldMatcher().matchField(field.getName(), field)) {                
-                    for(FieldAction action: fm.getFieldActions()) {
+                if (fm.getFieldMatcher().matchField(field.getName(), field)) {
+                    for (FieldAction action : fm.getFieldActions()) {
                         action.exec(field);
                     }
                 }
