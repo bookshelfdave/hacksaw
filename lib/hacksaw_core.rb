@@ -1,5 +1,5 @@
 include Java
-require 'Hacksaw.jar'
+require '../Hacksaw.jar'
 include_class Java::com.quadcs.hacksaw.HacksawMain
 include_class Java::com.quadcs.hacksaw.MethodAction
 include_class Java::com.quadcs.hacksaw.FieldAction
@@ -14,55 +14,21 @@ include_class Java::javassist.bytecode.Descriptor
 
 
 module Hacksaw
-    
-  class SingleMethodNameMatcher
-    include MethodMatcher
-    attr_accessor :methodname
-    def initialize(name)
-      @methodname = name
-    end
-    def matchMethod(method, sig)
-      # this WILL match all methods with the same name in a class
-      method == @methodname
-    end
-  end
   
-  class RegexMethodNameMatcher
-    include MethodMatcher
-    attr_accessor :regex
-    def initialize(regex)
-      @regex = regex
-    end
-    def matchMethod(method, sig)
-        @regex.match(method) 
-    end
-  end
-
-  class ListMethodNameMatcher
-    include MethodMatcher
-    attr_accessor :l
-    def initialize(methodlist)
-      @l = methodlist
-    end
-    def matchMethod(method, sig)
-      @l.include? method
-    end
-  end
-
- 
-  
-  
-  class SingleClassMatcher
+  class RubyClassMatcher
     include ClassMatcher
-    attr_accessor :classname
-    def initialize(classname)
-      @classname=classname
+    attr_accessor :blk
+
+    def initialize(&blk)
+        @blk = blk
+      end
+
+      def matchClass(classname)
+        result = @blk.call(classname)
+        puts result
+      end
     end
-    def matchClass(classname)
-      @classname == classname
-    end
-  end
-  
+
   class ChangeFieldModifiers < FieldAction
     attr_accessor :mods
     
@@ -150,26 +116,62 @@ module Hacksaw
     c.getMethodActions().add(a)
   end
   
-  def modify_class(classname)
-    cm = SingleClassMatcher.new(classname)
-    c = ClassModification.new(cm)
+  
+  def modify_classes(params)
+    if params.include? :class then
+      classes = params[:class]
+    elsif params.include? :classes then
+      classes = params[:classes]
+    else
+      raise "No classes specified to modify"
+    end
+
+    matcher = case classes
+      when String then RubyClassMatcher.new { |name| puts "Exact: #{name}";name == classes}
+      when Regexp then RubyClassMatcher.new { |name| puts "Regexp: #{name}";(name =~ classes) != nil }
+      when Array  then RubyClassMatcher.new { |name| puts "Array: #{name}";classes.include?(name) }
+      else ClassMatcher.new { |name| false }  
+    end
+    
+    c = ClassModification.new(matcher)
     yield(c) if block_given?
-    #c.getMethodActions().each do |m|
-    #  puts "Running action #{m}"
-    #end
     HacksawMain.registerMod(c)
   end
   
-  def modify_field(params)
-    c = params[:of]
-    m = params[:modifiers]
-    field = params[:field]
-    cm = ChangeFieldModifiers.new(field.to_s,m)
-    c.getFieldActions().add(cm)
+  
+  def modify(params)
+   if params.include? :class or params.include? :classes then
+     modify_classes(params)
+   end 
   end
+  
+#  def modify_field(params)
+#    c = params[:of]
+#    m = params[:modifiers]
+#    field = params[:field]
+#    cm = ChangeFieldModifiers.new(field.to_s,m)
+#    c.getFieldActions().add(cm)
+#  end
+  
 end
 
 include Hacksaw
+
+
+modify :classes=>/com\.quadcs\.hacksaw\.tests\.*/ do |c|
+#  modify :method=>"Foo", :of=>c, :add_line_before=>"System.out.println(1000);"
+#  modify :field=>"x", :of=>c, :modifiers=>[:Public]  
+#  modify :constructor, :of=>c, 
+  puts "Modifying classes!"
+end
+
+
+#HacksawMain.DEBUG=true
+test = com.quadcs.hacksaw.tests.Foo.new()
+
+
+#test.x="Post"
+
 
 
 #modify_class "com.quadcs.hacksaw.tests.Foo" do |c| 
@@ -203,21 +205,19 @@ include Hacksaw
 #end  
 
 
-#modify :class=>"com.quadcs.hacksaw.tests.Foo" do |c|
-#  modify :method=>"Foo", :of=>c, :add_line_before=>"System.out.println(1000);"
-#  modify :field=>"x", :of=>c, :modifiers=>[:Public]  
-#  modify :constructor, :of=>c, 
+
+#def test_regex(params)
+#  obj = params[:name]  
+#  case obj 
+#    when String then puts "String"
+#    when Regexp then 
+#  end
 #end
 
+#t = testit(:name=>"foo") 
+#t2 = testit(:name=>/[a-zA-Z0-9_]+/)
+#t3 = testit(:name=>["com.foo.Baz","com.foo.bar"])
+#puts t.matchClass("foo")
+#puts t2.matchClass("com.foo.bar")
+#puts t3.matchClass("com.foo.bar")
 
-#HacksawMain.DEBUG=true
-test = com.quadcs.hacksaw.tests.Foo.new()
-#test.x="Post"
-
-def test_regex(params)
-  obj = params[:name]  
-  case obj 
-    when String then puts "String"
-    when Regexp then 
-  end
-end
