@@ -18,24 +18,13 @@ package com.quadcs.hacksaw;
 
 import javassist.CtField;
 
-/**
- *
- * @author dparfitt
- */
 public class FieldAction {
     protected FieldMatcher matcher;
 
-    public FieldAction(FieldMatcher matcher) {
-        this.matcher = matcher;
-              
+    public FieldAction() {
     }
 
-    public FieldMatcher getMatcher() {
-        return matcher;
-    }
-
-    
-    
+   
     public void exec(CtField c) {
             
     }
