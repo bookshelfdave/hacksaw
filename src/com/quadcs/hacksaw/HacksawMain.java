@@ -106,10 +106,12 @@ public class HacksawMain implements ClassFileTransformer {
     private void processFields(CtClass klass, ClassModification l) {
         // TODO: Need a set of declared AND non-declared fields
         for (CtField field : klass.getDeclaredFields()) {
-            for(FieldAction fa: l.getFieldActions()) {
-                // TODO: Should I be using equalsIgnoreCase here?
-                if(fa.getFieldName().equalsIgnoreCase(field.getName())) {                
-                    fa.exec(field);
+            for(FieldModification fm: l.getFieldModifications()) {
+                // TODO: Should I be using equalsIgnoreCase here?               
+                if(fm.getFieldMatcher().matchField(field.getName(), field)) {                
+                    for(FieldAction action: fm.getFieldActions()) {
+                        action.exec(field);
+                    }
                 }
             }
         }

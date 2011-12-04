@@ -25,7 +25,7 @@ public class ClassModification {
     // or do they allow the user to add more than 1 mod for eatch type of action?
     private List<ClassAction> classActions = new ArrayList<ClassAction>();
     private List<MethodAction> methodActions = new ArrayList<MethodAction>();
-    private List<FieldAction> fieldActions = new ArrayList<FieldAction>();
+    private List<FieldModification> fieldModifications = new ArrayList<FieldModification>();
 
     public ClassModification(ClassMatcher cm) {
         this.classMatcher = cm;
@@ -43,7 +43,7 @@ public class ClassModification {
         return classMatcher;
     }
 
-    public List<FieldAction> getFieldActions() {
-        return fieldActions;
+    public List<FieldModification> getFieldModifications() {
+        return fieldModifications;
     }
 }

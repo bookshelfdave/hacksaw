@@ -11,16 +11,28 @@
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
- */
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 
 package com.quadcs.hacksaw;
 
-import javassist.CtMethod;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- *
- * @author dparfitt
- */
-public interface MethodMatcher {    
-    public boolean matchMethod(String method, CtMethod m);
+public class FieldModification {
+    private FieldMatcher fieldMatcher;
+    private List<FieldAction> fieldActions = new ArrayList<FieldAction>();
+
+    public FieldModification(FieldMatcher fm) {
+        this.fieldMatcher = fm;
+    }
+    
+    public FieldMatcher getFieldMatcher() {
+        return fieldMatcher;
+    }
+
+    public List<FieldAction> getFieldActions() {
+        return fieldActions;
+    }
 }

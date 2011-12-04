@@ -23,16 +23,19 @@ import javassist.CtField;
  * @author dparfitt
  */
 public class FieldAction {
-    protected String fieldName;
+    protected FieldMatcher matcher;
 
-    public FieldAction(String fieldName) {
-        this.fieldName = fieldName;
+    public FieldAction(FieldMatcher matcher) {
+        this.matcher = matcher;
+              
     }
 
-    public String getFieldName() {
-        return fieldName;
+    public FieldMatcher getMatcher() {
+        return matcher;
     }
 
+    
+    
     public void exec(CtField c) {
             
     }

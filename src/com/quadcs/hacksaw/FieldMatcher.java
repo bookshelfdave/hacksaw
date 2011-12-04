@@ -1,3 +1,5 @@
+
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
  * Copyright (C) 2011- Dave Parfitt. All Rights Reserved.
@@ -15,12 +17,13 @@
 
 package com.quadcs.hacksaw;
 
-import javassist.CtMethod;
+import javassist.CtField;
 
 /**
  *
  * @author dparfitt
  */
-public interface MethodMatcher {    
-    public boolean matchMethod(String method, CtMethod m);
+public interface FieldMatcher {
+    public boolean matchField(String fieldName, CtField f);
+    
 }

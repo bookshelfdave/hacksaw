@@ -5,7 +5,9 @@ include_class Java::com.quadcs.hacksaw.MethodAction
 include_class Java::com.quadcs.hacksaw.FieldAction
 include_class Java::com.quadcs.hacksaw.ClassMatcher
 include_class Java::com.quadcs.hacksaw.MethodMatcher
+include_class Java::com.quadcs.hacksaw.FieldMatcher
 include_class Java::com.quadcs.hacksaw.ClassModification
+include_class Java::com.quadcs.hacksaw.FieldModification
 
 
 include_class Java::javassist.ClassPool
@@ -18,20 +20,42 @@ module Hacksaw
   class RubyClassMatcher
     include ClassMatcher
     attr_accessor :blk
+    def initialize(&blk)
+        @blk = blk
+      end
+      def matchClass(classname)
+        @blk.call(classname)
+      end
+    end
 
+  class RubyMethodMatcher
+    include MethodMatcher
+    attr_accessor :blk
     def initialize(&blk)
         @blk = blk
       end
 
-      def matchClass(classname)
-        result = @blk.call(classname)
-        puts result
+      def matchMethod(methodname,m)
+        @blk.call(methodname,m)
       end
     end
 
+    
+   class RubyFieldMatcher
+    include FieldMatcher
+    attr_accessor :blk
+    def initialize(&blk)
+        @blk = blk
+      end
+
+      def matchField(fieldname,f)
+        @blk.call(fieldname,f)
+      end
+    end
+   
+    
   class ChangeFieldModifiers < FieldAction
     attr_accessor :mods
-    
     @@modvals = { :Abstract=>1024, 
                   :Annotation=>8192, 
                   :Enum=>16384,
@@ -117,6 +141,31 @@ module Hacksaw
   end
   
   
+  
+  def modify_fields(params)
+    if params.include? :field then
+      fields = params[:field]
+    elsif params.include? :fields then
+      fields = params[:fields]
+    else
+      raise "No field(s) specified to modify"
+    end
+    
+    fm = params[:of]
+    
+    matcher = case fields
+      when String then RubyFieldMatcher.new { |name,f| name == fields}
+      when Regexp then RubyFieldMatcher.new { |name,f| (name =~ fields) != nil }
+      when Array  then RubyFieldMatcher.new { |name,f| fields.include?(name) }
+      else RubyFieldMatcher.new { |name| false }  
+    end
+    f = FieldModification.new(matcher)
+    yield(f) if block_given?
+    fm.getFieldModifications().add(f)
+  end
+  
+  
+  
   def modify_classes(params)
     if params.include? :class then
       classes = params[:class]
@@ -127,9 +176,9 @@ module Hacksaw
     end
 
     matcher = case classes
-      when String then RubyClassMatcher.new { |name| puts "Exact: #{name}";name == classes}
-      when Regexp then RubyClassMatcher.new { |name| puts "Regexp: #{name}";(name =~ classes) != nil }
-      when Array  then RubyClassMatcher.new { |name| puts "Array: #{name}";classes.include?(name) }
+      when String then RubyClassMatcher.new { |name| name == classes}
+      when Regexp then RubyClassMatcher.new { |name| (name =~ classes) != nil }
+      when Array  then RubyClassMatcher.new { |name| classes.include?(name) }
       else ClassMatcher.new { |name| false }  
     end
     
@@ -139,12 +188,6 @@ module Hacksaw
   end
   
   
-  def modify(params)
-   if params.include? :class or params.include? :classes then
-     modify_classes(params)
-   end 
-  end
-  
 #  def modify_field(params)
 #    c = params[:of]
 #    m = params[:modifiers]
@@ -153,12 +196,29 @@ module Hacksaw
 #    c.getFieldActions().add(cm)
 #  end
   
+  
+  def modify(params,&blk)
+   if params.include? :class or params.include? :classes then
+     modify_classes(params,&blk)
+   elsif params.include? :method or params.include? :methods then
+     puts "Modifying methods!"
+   elsif params.include? :field or params.include? :fields then
+    modify_fields(params,&blk)
+   end 
+  end
+  
+
+  
 end
 
 include Hacksaw
 
 
 modify :classes=>/com\.quadcs\.hacksaw\.tests\.*/ do |c|
+  modify :field=>"Foo", :of=>c do |f|
+    
+  end
+  
 #  modify :method=>"Foo", :of=>c, :add_line_before=>"System.out.println(1000);"
 #  modify :field=>"x", :of=>c, :modifiers=>[:Public]  
 #  modify :constructor, :of=>c, 
