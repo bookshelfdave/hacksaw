@@ -215,64 +215,23 @@ include Hacksaw
 
 
 modify :classes=>/com\.quadcs\.hacksaw\.tests\.*/ do |c|
-  modify :field=>"Foo", :of=>c do |f|
-    
+  c.modify :field=>"Foo", :type=>/java\.lang\.*/ do |f|
+    f.change_modifiers [:Public]
+  end  
+  c.modify :method=>/*/, :params=>["java.lang.String",/*/] do |m|
+    f.add_line_before 'System.out.println("Hello world");'
+    f.add_line_after 'System.out.println("Goodbye world");'
   end
-  
-#  modify :method=>"Foo", :of=>c, :add_line_before=>"System.out.println(1000);"
-#  modify :field=>"x", :of=>c, :modifiers=>[:Public]  
-#  modify :constructor, :of=>c, 
-  puts "Modifying classes!"
+  c.modify :constructor=>/*/ do |ctor|
+    ctor.add_line_before 'System.out.println("Hello from a constructor");'
+  end
 end
 
 
 #HacksawMain.DEBUG=true
 test = com.quadcs.hacksaw.tests.Foo.new()
-
-
 #test.x="Post"
 
-
-
-#modify_class "com.quadcs.hacksaw.tests.Foo" do |c| 
-#  add_before    :method=>:foo,   :of=>c, :line=>%{System.out.println("Hi");}  
-#  add_after     :method=>"foo",  :of=>c, :line=>%{System.out.println("Goodbye");}
-#  modify_field  :field=>"x",     :of=>c, :modifiers=>[:Public]
-#end
-#
-#
-#modify_class "com.quadcs.hacksaw.tests.Foo" do |c| 
-#  modify_method "foo", :of=>c do |m|
-#    add_before    :method=>:foo,   :of=>c, :line=>%{System.out.println("Hi");}  
-#    add_after     :method=>"foo",  :of=>c, :line=>%{System.out.println("Goodbye");}
-#  end
-# 
-#  modify_field "x", :of=>c do |f|
-#  end
-#  
-#  modify_field  :field=>"x",     :of=>c, :modifiers=>[:Public]
-#end
-#
-#
-#
-#modify_class "com.quadcs.hacksaw.tests.Foo" do |c| 
-#  add_before_method :name=>"foo"
-#  add_after_method :name=>/[a-zA-Z0-9_]/ 
-#  
-#  #modify_method
-#  #modify_field "x", :of=>c, :modifiers=>[:Public]
-#  #modify_constructor
-#end  
-
-
-
-#def test_regex(params)
-#  obj = params[:name]  
-#  case obj 
-#    when String then puts "String"
-#    when Regexp then 
-#  end
-#end
 
 #t = testit(:name=>"foo") 
 #t2 = testit(:name=>/[a-zA-Z0-9_]+/)
