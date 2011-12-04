@@ -14,12 +14,12 @@
  */
 package com.quadcs.hacksaw;
 
-import javassist.CtField;
+import javassist.CtConstructor;
 
 /**
  *
  * @author dparfitt
  */
-public interface FieldMatcher {
-    public boolean match(CtField field);
+public interface CtorMatcher {
+    public boolean match(CtConstructor field);
 }

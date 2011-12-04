@@ -20,13 +20,21 @@ import java.util.List;
 
 public class ClassModification {
 
+    private int stepId = 0;
+    
     private ClassMatcher classMatcher;
-    // would these lists make more sense as maps...
-    // or do they allow the user to add more than 1 mod for eatch type of action?
+    
+    
+    private List<Object> allActions = new ArrayList<Object>();
     private List<ClassAction> classActions = new ArrayList<ClassAction>();
-    private List<MethodModification> methodModifications = new ArrayList<MethodModification>();
-    private List<FieldModification> fieldModifications = new ArrayList<FieldModification>();
-
+//    private List<MethodModification> methodModifications = new ArrayList<MethodModification>();
+//    private List<FieldModification> fieldModifications = new ArrayList<FieldModification>();
+//    private List<CtorModification> ctorModifications = new ArrayList<CtorModification>();
+//    
+    public ClassMatcher getClassMatcher() {
+        return classMatcher;
+    }
+     
     public ClassModification(ClassMatcher cm) {
         this.classMatcher = cm;
     }
@@ -34,16 +42,39 @@ public class ClassModification {
     public List<ClassAction> getClassActions() {
         return classActions;
     }
-
-    public List<MethodModification> getMethodModifications() {
-        return methodModifications;
+    
+    public List<Object> getAllModifications() {
+        return allActions;
     }
-
-    public ClassMatcher getClassMatcher() {
-        return classMatcher;
+    
+    public void addClassAction(ClassAction ca) {
+        allActions.add(ca);
     }
-
-    public List<FieldModification> getFieldModifications() {
-        return fieldModifications;
+    
+    public void addMethodModification(MethodModification mm) {
+        allActions.add(mm);
     }
+    
+    public void addFieldModification(FieldModification fm) {
+        allActions.add(fm);
+    }
+    
+    public void addCtorModification(CtorModification cm) {
+        allActions.add(cm);
+    }
+    
+//    
+//    public List<MethodModification> getMethodModifications() {
+//        return methodModifications;
+//    }
+//
+//    public List<FieldModification> getFieldModifications() {
+//        return fieldModifications;
+//    }
+//
+//    public List<CtorModification> getCtorModifications() {
+//        return ctorModifications;
+//    }
+//    
+    
 }

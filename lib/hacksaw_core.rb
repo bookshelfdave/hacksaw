@@ -1,6 +1,7 @@
 include Java
 require '../Hacksaw.jar'
 include_class Java::com.quadcs.hacksaw.HacksawMain
+include_class Java::com.quadcs.hacksaw.ClassAction
 include_class Java::com.quadcs.hacksaw.MethodAction
 include_class Java::com.quadcs.hacksaw.FieldAction
 include_class Java::com.quadcs.hacksaw.ClassModification
@@ -17,36 +18,50 @@ include_class Java::javassist.bytecode.Descriptor
 
 module Hacksaw  
  
-  class ChangeFieldModifiers < FieldAction
-      attr_accessor :mods
-      @@modvals = { :abstract=>1024, 
-        :annotation=>8192, 
-        :enum=>16384,
-        :final=>16,
-        :interface=>512,
-        :native=>256,
-        :private=>2,
-        :protected=>4,
-        :public=>1,
-        :static=>8,
-        :strict=>2048,
-        :synchronized=>32,
-        :transient=>128, # is 128 correct for transient AND varargs?
-        :varargs=>128,
-        :volatile=>64
-      }
-    
-      def initialize(mods)
-        super()
-        @mods = mods
-      end
-    
-      def exec(fm)
-        ord = @mods.map {|m| @@modvals[m]}.reduce(:|)
-        puts "Changing modifiers to #{ord}"
-        fm.setModifiers(ord)
-      end
+  class SaveClass < ClassAction
+    attr_accessor :path
+    def initialize(path)
+      super()
+      @path = path
     end
+    
+    def exec(c)
+      puts "Saving class #{c.getName()} to #{@path}"
+      puts "TODO: This is writing to the lib directory!"
+      c.debugWriteFile(@path)
+    end
+  end
+  
+  class ChangeFieldModifiers < FieldAction
+    attr_accessor :mods
+    @@modvals = { :abstract=>1024, 
+      :annotation=>8192, 
+      :enum=>16384,
+      :final=>16,
+      :interface=>512,
+      :native=>256,
+      :private=>2,
+      :protected=>4,
+      :public=>1,
+      :static=>8,
+      :strict=>2048,
+      :synchronized=>32,
+      :transient=>128, # is 128 correct for transient AND varargs?
+      :varargs=>128,
+      :volatile=>64
+    }
+    
+    def initialize(mods)
+      super()
+      @mods = mods
+    end
+    
+    def exec(fm)
+      ord = @mods.map {|m| @@modvals[m]}.reduce(:|)
+      puts "Changing modifiers to #{ord}"
+      fm.setModifiers(ord)
+    end
+  end
 
   
   
@@ -78,6 +93,7 @@ module Hacksaw
     end
   end
     
+  
   class ClassMod < ClassModification
     def initialize(matcher)
       super(matcher)
@@ -92,11 +108,13 @@ module Hacksaw
         puts "Mod ctor"
       end  
     end
-    
-    
-    
 
-  def modify_methods(params)
+    def save_to(path)
+      s = SaveClass.new(path)
+      addClassAction(s)
+    end
+
+    def modify_methods(params)
       if params.include? :method then
         methods = params[:method]
       elsif params.include? :methods then
@@ -114,30 +132,9 @@ module Hacksaw
       m = MethodMod.new(matcher)
       
       yield(m) if block_given?
-      getMethodModifications().add(m)
+      addMethodModification(m)
     end
- 
-  
-#    def modify_fields(params)
-#      if params.include? :field then
-#        fields = params[:field]
-#      elsif params.include? :fields then
-#        fields = params[:fields]
-#      else
-#        raise "No field(s) specified to modify"
-#      end
-#    
-#      matcher = case fields
-#      when String then GenMatcher.new { |name,f| name == fields}
-#      when Regexp then GenMatcher.new { |name,f| (name =~ fields) != nil }
-#      when Array  then GenMatcher.new { |name,f| fields.include?(name) }
-#      else RubyFieldMatcher.new { |name| false }  
-#      end
-#      f = FieldMod.new(matcher)
-#      
-#      yield(f) if block_given?
-#      getFieldModifications().add(f)
-#    end 
+
   end
   
   
@@ -236,15 +233,6 @@ module Hacksaw
   end
   
   
-  #  def modify_field(params)
-  #    c = params[:of]
-  #    m = params[:modifiers]
-  #    field = params[:field]
-  #    cm = ChangeFieldModifiers.new(field.to_s,m)
-  #    c.getFieldActions().add(cm)
-  #  end
-  
-  
   def modify(params,&blk)
     if params.include? :class or params.include? :classes then
       modify_classes(params,&blk)
@@ -274,10 +262,14 @@ include Hacksaw
 
 
 modify :classes=>/com\.quadcs\.hacksaw\.tests\.*/ do |c|
-    c.modify :method=>"foo", :params=>["java.lang.String",/.*/] do |m|
-      m.add_line_before 'System.out.println("Hello world x");'
-      m.add_line_after 'System.out.println("Goodbye world y");'
-    end
+  puts "1"
+  c.modify :method=>"foo", :params=>["java.lang.String",/.*/] do |m|
+    puts "2"
+    m.add_line_before 'System.out.println("Hello World");'
+    m.add_line_after 'System.out.println("Goodbye world y");'
+  end
+  puts "3"
+  c.save_to(".")
 end
 
 

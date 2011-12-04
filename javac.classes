@@ -1,7 +1,9 @@
 src/com/quadcs/hacksaw/ClassAction.java
 src/com/quadcs/hacksaw/ClassMatcher.java
 src/com/quadcs/hacksaw/ClassModification.java
-src/com/quadcs/hacksaw/DescriptorSet.java
+src/com/quadcs/hacksaw/CtorAction.java
+src/com/quadcs/hacksaw/CtorMatcher.java
+src/com/quadcs/hacksaw/CtorModification.java
 src/com/quadcs/hacksaw/FieldAction.java
 src/com/quadcs/hacksaw/FieldMatcher.java
 src/com/quadcs/hacksaw/FieldModification.java

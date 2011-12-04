@@ -14,12 +14,26 @@
  */
 package com.quadcs.hacksaw;
 
-import javassist.CtField;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author dparfitt
  */
-public interface FieldMatcher {
-    public boolean match(CtField field);
+public class CtorModification {
+    private CtorMatcher ctorMatcher;
+    private List<CtorAction> ctorActions = new ArrayList<CtorAction>();
+
+    public CtorModification(CtorMatcher fm) {
+        this.ctorMatcher = fm;
+    }
+    
+    public CtorMatcher getCtorMatcher() {
+        return ctorMatcher;
+    }
+
+    public List<CtorAction> getCtorActions() {
+        return ctorActions;
+    }
 }
