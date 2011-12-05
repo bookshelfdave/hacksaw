@@ -1,6 +1,15 @@
 Hello -
 
-  This project is currently a prototype! I'm still experimenting with how the DSL should look. Maybe it's the wrong way to go about it, but I enjoy playing with languages.
+  This project is currently a prototype! 
+
+But, the idea is to have something like this in JRuby:
+
+modify :classes=>/com\.quadcs\.hacksaw\.demo\.DemoAccount/ do |c|
+  c.modify :method=>"isValidAccount" do |m|
+    m.add_line_before 'return true;'
+  end
+end
+
 
 Cheers!
 Dave
