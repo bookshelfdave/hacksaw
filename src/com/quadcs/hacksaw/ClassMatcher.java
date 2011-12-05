@@ -11,11 +11,15 @@
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
- *
- * ***** END LICENSE BLOCK ***** */
+ */
 package com.quadcs.hacksaw;
 
-public interface ClassMatcher {
+import javassist.CtClass;
 
-    public boolean matchClass(String classname);
+/**
+ *
+ * @author dparfitt
+ */
+public interface ClassMatcher {
+    public boolean match(CtClass c);
 }

@@ -1,4 +1,3 @@
-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
  * Copyright (C) 2011- Dave Parfitt. All Rights Reserved.
@@ -14,18 +13,26 @@
  * License.
  *
  * ***** END LICENSE BLOCK ***** */
+
 package com.quadcs.hacksaw;
 
-import javassist.CtField;
+import java.util.ArrayList;
+import java.util.List;
 
-public class FieldAction {
-   
-    public FieldAction() {
-    }
 
-   
-    public void exec(CtField c) {
-            
+public class MethodModification {
+    private MethodMatcher methodMatcher;
+    private List<MethodAction> methodActions = new ArrayList<MethodAction>();
+
+    public MethodModification(MethodMatcher mm) {
+        this.methodMatcher = mm;
     }
     
+    public MethodMatcher getMethodMatcher() {
+        return methodMatcher;
+    }
+
+    public List<MethodAction> getMethodActions() {
+        return methodActions;
+    }
 }

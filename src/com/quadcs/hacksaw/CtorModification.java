@@ -1,4 +1,3 @@
-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
  * Copyright (C) 2011- Dave Parfitt. All Rights Reserved.
@@ -12,20 +11,29 @@
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
- *
- * ***** END LICENSE BLOCK ***** */
+ */
 package com.quadcs.hacksaw;
 
-import javassist.CtField;
+import java.util.ArrayList;
+import java.util.List;
 
-public class FieldAction {
-   
-    public FieldAction() {
-    }
+/**
+ *
+ * @author dparfitt
+ */
+public class CtorModification {
+    private CtorMatcher ctorMatcher;
+    private List<CtorAction> ctorActions = new ArrayList<CtorAction>();
 
-   
-    public void exec(CtField c) {
-            
+    public CtorModification(CtorMatcher fm) {
+        this.ctorMatcher = fm;
     }
     
+    public CtorMatcher getCtorMatcher() {
+        return ctorMatcher;
+    }
+
+    public List<CtorAction> getCtorActions() {
+        return ctorActions;
+    }
 }

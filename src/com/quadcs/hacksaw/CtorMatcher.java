@@ -1,4 +1,3 @@
-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
  * Copyright (C) 2011- Dave Parfitt. All Rights Reserved.
@@ -12,20 +11,15 @@
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
- *
- * ***** END LICENSE BLOCK ***** */
+ */
 package com.quadcs.hacksaw;
 
-import javassist.CtField;
+import javassist.CtConstructor;
 
-public class FieldAction {
-   
-    public FieldAction() {
-    }
-
-   
-    public void exec(CtField c) {
-            
-    }
-    
+/**
+ *
+ * @author dparfitt
+ */
+public interface CtorMatcher {
+    public boolean match(CtConstructor field);
 }

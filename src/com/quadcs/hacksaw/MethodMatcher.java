@@ -12,13 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  */
-
 package com.quadcs.hacksaw;
+
+import javassist.CtMethod;
 
 /**
  *
  * @author dparfitt
  */
-public interface MethodMatcher {    
-    public boolean matchMethod(String method, String signature);
+public interface MethodMatcher {
+    public boolean match(CtMethod m);
 }

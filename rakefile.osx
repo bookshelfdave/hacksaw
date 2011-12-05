@@ -51,10 +51,11 @@ task :compile => sources do
     f.puts "-d dist"
     f.puts "-g"
     f.puts '-sourcepath src'
+    f.puts "-classpath #{jars.join(":")}"
   end
-  cp = jars.join(";")
+  
   command =<<EOF
-#{JAVAC} -J-Xms256m -J-Xmx256m -classpath #{cp} @javac.options @javac.classes
+#{JAVAC} -J-Xms256m -J-Xmx256m  @javac.options @javac.classes
 EOF
   sh command
 end
