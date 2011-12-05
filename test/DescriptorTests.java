@@ -50,7 +50,7 @@ public class DescriptorTests {
     public void testParamFail() throws Exception {
         String[] params = {"xyz"};
         try {
-            String desc = Utils.makeDesc("java.lang.String[]",params);
+            Utils.makeDesc("java.lang.String[]",params);
             fail("Invalid descriptor created");
         } catch (Exception e) {
             assertTrue("Check error message", e.getMessage().contains("invalid paramter:xyz"));                    
@@ -61,7 +61,7 @@ public class DescriptorTests {
     public void testReturnTypeFail() throws Exception {
         String[] params = {"int"};
         try {
-            String desc = Utils.makeDesc("xyz",params);
+            Utils.makeDesc("xyz",params);
             fail("Invalid descriptor created");
         } catch (Exception e) {
             assertTrue("Check error message", e.getMessage().contains("invalid return type:xyz"));                    
