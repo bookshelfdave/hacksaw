@@ -14,32 +14,6 @@
 # *
 # * ***** END LICENSE BLOCK ***** */
 
-
-# add support for Ruby Gems:
-#export RUBYOPT=rubygems
-# or
-#require 'rubygems'
-#https://gist.github.com/54177
-
-require 'anttrap'
-require 'rbconfig'
-
-# the name of the Ant project.
-# adding a timestamp may be helpful to you
-AntTrap.antproject="Hacksaw #{Time.new}"
-
-# Generate a file named build.xml
-AntTrap.antfile="build.xml"
-
-# path to the rake binary
-# the default is rake, but you can use what you like here
-if RbConfig::CONFIG['host_os'] =~ /mswin|mingw/ then
-  AntTrap.rake = 'rake.bat'
-end
-
-# additional arguments to pass to rake
-AntTrap.rakeargs = ["-v"]
-
 task :default => [:jar]
 
 JAVA_HOME=ENV['JAVA_HOME']
@@ -47,8 +21,8 @@ JAVAC = "#{JAVA_HOME}//bin//javac"
 JAR = "#{JAVA_HOME}//bin//jar"
 
 sources = FileList['src/**/*.java']
-classes = sources.ext('class')
-jars = FileList['lib/**/*.jar']
+#classes = sources.ext('class')
+jars = FileList['javalibs/**/*.jar']
 
 desc "Compiles all Java sources files in the project"
 task :compile => sources do
@@ -68,10 +42,10 @@ task :compile => sources do
     f.puts "-d dist"
     f.puts "-g"
     f.puts '-sourcepath src'
-  end
-  cp = jars.join(";")
+    f.puts "-classpath #{jars.join(";")}"
+  end  
   command =<<EOF
-#{JAVAC} -J-Xms256m -J-Xmx256m -classpath #{cp} @javac.options @javac.classes
+#{JAVAC} -J-Xms256m -J-Xmx256m @javac.options @javac.classes
 EOF
   sh command
 end
@@ -79,9 +53,9 @@ end
 task :jar => :compile do
   puts "Building Jar"
   cd "dist"  
-  sh "#{JAR} xf ..\\lib\\javassist.jar"
+  sh "#{JAR} xf ..\\javalibs\\javassist.jar"
   cd '..'
-  cp('.\lib\Javassist_Readme.html','.\\dist')
+  cp('.\javalibs\Javassist_Readme.html','.\\dist')
   cp('License.html','.\\dist')
   cd "dist"  
   begin	
