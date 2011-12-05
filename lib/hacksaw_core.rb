@@ -14,7 +14,7 @@
 # *
 # * ***** END LICENSE BLOCK ***** */
 include Java
-require '../Hacksaw.jar'
+require 'Hacksaw.jar'
 include_class Java::com.quadcs.hacksaw.HacksawMain
 include_class Java::com.quadcs.hacksaw.ClassAction
 include_class Java::com.quadcs.hacksaw.MethodAction
@@ -28,6 +28,7 @@ include_class Java::com.quadcs.hacksaw.FieldMatcher
 include_class Java::javassist.ClassPool
 include_class Java::javassist.CtClass
 include_class Java::javassist.bytecode.Descriptor
+
 
 module Hacksaw   
   class SaveClass < ClassAction
@@ -273,21 +274,40 @@ include Hacksaw
 
 
 
-modify :classes=>/com\.quadcs\.hacksaw\.tests\.*/ do |c|
-  puts "1"
-  c.modify :method=>"foo", :params=>["java.lang.String",/.*/] do |m|
-    puts "2"
-    m.add_line_before 'System.out.println("Hello World");'
-    m.add_line_after 'System.out.println("Goodbye world y");'
+#modify :classes=>/com\.quadcs\.hacksaw\.tests\.*/ do |c|
+#  c.modify :method=>"foo", :params=>["java.lang.String",/.*/] do |m|
+#    m.add_line_before 'System.out.println("Hello World");'
+#    m.add_line_after 'System.out.println("Goodbye world y");'
+#  end
+#end
+
+require 'jruby/core_ext'
+
+class MyTweak
+  def initialize
+    puts "New!!"
   end
-  puts "3"
-  c.save_to(".")
+  def some_method(s)    
+    puts "Hi there"
+  end
+end
+cls = MyTweak.become_java!
+puts cls
+
+#java_require 'MyTweak'
+#include_class Java::rubyobj.MyTweak
+modify :classes=>/com\.quadcs\.hacksaw\.demo\.DemoAccount/ do |c|
+  c.modify :method=>"isValidAccount" do |m|  
+   m.add_line_before 'if(accountNumber.equals("abcd")) { return true; }'
+   #m.add_line_before 'new MyTweak().some_method(this);'
+  end
 end
 
 
-
 #HacksawMain.DEBUG=true
-t = com.quadcs.hacksaw.tests.Foo.new()
-puts t.foo()
+a = com.quadcs.hacksaw.demo.DemoAccount.new("abcd")
+puts a.isValidAccount()
+#t = com.quadcs.hacksaw.tests.Foo.new()
+#puts t.foo()
 #test.x="Post"
 

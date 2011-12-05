@@ -1,4 +1,4 @@
-package com.quadcs.hacksaw.tests;
+package com.quadcs.hacksaw.demo;
 
 public class Bar {
     public String foo = "FOO";

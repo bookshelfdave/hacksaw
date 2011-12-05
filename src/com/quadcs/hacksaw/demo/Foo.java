@@ -1,8 +1,8 @@
-package com.quadcs.hacksaw.tests;
+package com.quadcs.hacksaw.demo;
 
 public class Foo {
 
-    private String x = "Foo!";
+    private String myString = "Foo!";
 
     private int doSomething(int a, int b) {
         if(a > 1) {
@@ -10,21 +10,16 @@ public class Foo {
         } else {
             return a + b;
         }
-        
     }
 
     public String getX() {
-        return x;
+        return myString;
     }
 
     public String foo() {
         int s = doSomething(4,5);
-        return "Foo:" + s + x;
+        return "Foo:" + s + myString;
     }
 
-    public String bar() {
-        int s = doSomething(1,2);
-        return "Bar:" + s + x;
-    }
-
+    
 }

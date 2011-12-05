@@ -34,9 +34,10 @@ import javassist.NotFoundException;
 
 public class HacksawMain implements ClassFileTransformer {
 
-    public static final String version = "0.2 \"XYZ\"";
+    public static final String version = "0.3 \"Post Zilla\"";
     public static Instrumentation sys;
 
+    
     public static void premain(String agentArgs, Instrumentation inst) {
         System.out.println("--------------------------------------------------------------");
         System.out.println("Hacksaw V" + version);
