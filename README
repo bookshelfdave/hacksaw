@@ -4,11 +4,24 @@ Hello -
 
 But, the idea is to have something like this in JRuby:
 
+
 modify :classes=>/com\.quadcs\.hacksaw\.demo\.DemoAccount/ do |c|
-  c.modify :method=>"isValidAccount" do |m|
-    m.add_line_before 'return true;'
-  end
+    c.add_field 'public int z = 0;'  
+
+    c.modify :field=>"accountNumber" do |f|
+      f.change_modifiers [:public]
+    end
+    
+    c.modify :method=>"isValidAccount" do |m|  
+      m.add_line_before 'if(accountNumber.equals("abcd")) { return true; }'
+    end    
+    
+    c.add_method 'public String somethingNew(int dx) { return accountNumber + "." + z + "." + dx; }'    
 end
+
+# Append this to the JVM options when JRuby is started:
+# -J-javaagent:/path/to/Hacksaw.jar
+
 
 
 Cheers!

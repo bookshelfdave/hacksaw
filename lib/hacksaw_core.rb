@@ -345,7 +345,7 @@ include Hacksaw
 #  end
 #end
 
-modify :classes=>/com\.quadcs\.hacksaw\.demo\.DemoAccount/ do |c|
+modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
     c.add_field 'public int z = 0;'  
 
     c.modify :field=>"accountNumber" do |f|
@@ -360,6 +360,10 @@ modify :classes=>/com\.quadcs\.hacksaw\.demo\.DemoAccount/ do |c|
     #c.save_to(".")
 end
 
+modify :classes=>/com.quadcs.hacksaw.demo.[FB][a-z]+/ do |c| 
+  c.add_field 'public String mynewfield = "Hello world";'  
+end
+
 
 # TO GET THIS TO RUN, YOU WILL NEED TO APPEND THIS AS AN ARG TO JAVA.EXE
 # -javaagent:Hacksaw.jar
@@ -368,6 +372,11 @@ end
 a = com.quadcs.hacksaw.demo.DemoAccount.new("abcd")
 puts a.z
 puts a.somethingNew(99)
+
+foo = com.quadcs.hacksaw.demo.Foo.new()
+bar = com.quadcs.hacksaw.demo.Bar.new()
+puts foo.mynewfield
+puts bar.mynewfield
 
 #puts a.getAccountNumber()
 #puts a.accountNumber
