@@ -28,6 +28,7 @@ include_class Java::com.quadcs.hacksaw.FieldMatcher
 include_class Java::javassist.ClassPool
 include_class Java::javassist.CtClass
 include_class Java::javassist.CtMethod
+include_class Java::javassist.CtField
 include_class Java::javassist.CtNewMethod
 include_class Java::javassist.bytecode.Descriptor
 
@@ -61,7 +62,19 @@ module Hacksaw
     end
   end
 
-  
+  class AddFieldToClass < ClassAction
+    attr_accessor :fielddef
+    def initialize(fielddef)
+      super()
+      @fielddef = fielddef
+    end
+    
+    def exec(c)            
+      f = CtField.make(@fielddef,c)
+      c.addField(f)
+    end
+  end
+    
   class ChangeFieldModifiers < FieldAction
     attr_accessor :mods
     @@modvals = { 
@@ -93,6 +106,7 @@ module Hacksaw
       fm.setModifiers(ord)
     end
   end
+
 
   
   
@@ -150,6 +164,11 @@ module Hacksaw
       addClassAction(s)
     end
 
+    def add_field(fielddef)
+      f = AddFieldToClass.new(fielddef)
+      addClassAction(f)
+    end
+    
     def modify_methods(params)
       if params.include? :method then
         methods = params[:method].to_s
@@ -327,15 +346,17 @@ include Hacksaw
 #end
 
 modify :classes=>/com\.quadcs\.hacksaw\.demo\.DemoAccount/ do |c|
+    c.add_field 'public int z = 0;'  
+
     c.modify :field=>"accountNumber" do |f|
       f.change_modifiers [:public]
     end
     
     c.modify :method=>"isValidAccount" do |m|  
       m.add_line_before 'if(accountNumber.equals("abcd")) { return true; }'
-    end
+    end    
     
-    c.add_method 'public String somethingNew(int dx) { return accountNumber + "." + dx; }'
+    c.add_method 'public String somethingNew(int dx) { return accountNumber + "." + z + "." + dx; }'    
     #c.save_to(".")
 end
 
@@ -345,7 +366,8 @@ end
 
 #HacksawMain.DEBUG=true
 a = com.quadcs.hacksaw.demo.DemoAccount.new("abcd")
-#puts a.somethingNew(99)
+puts a.z
+puts a.somethingNew(99)
 
 #puts a.getAccountNumber()
 #puts a.accountNumber
