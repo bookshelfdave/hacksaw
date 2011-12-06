@@ -3,7 +3,7 @@ package com.quadcs.hacksaw.demo;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-public class DemoAccount {
+public final class DemoAccount {
     private String accountNumber;
     private String pattern = "\\d\\d\\d\\d";
     

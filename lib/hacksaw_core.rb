@@ -27,6 +27,8 @@ include_class Java::com.quadcs.hacksaw.MethodMatcher
 include_class Java::com.quadcs.hacksaw.FieldMatcher
 include_class Java::javassist.ClassPool
 include_class Java::javassist.CtClass
+include_class Java::javassist.CtMethod
+include_class Java::javassist.CtNewMethod
 include_class Java::javassist.bytecode.Descriptor
 
 
@@ -44,10 +46,26 @@ module Hacksaw
       c.debugWriteFile(@path)
     end
   end
+
+
+  class AddMethodToClass < ClassAction
+    attr_accessor :methoddef
+    def initialize(methoddef)
+      super()
+      @methoddef = methoddef
+    end
+    
+    def exec(c)            
+      m = CtNewMethod.make(@methoddef,c)
+      c.addMethod(m)
+    end
+  end
+
   
   class ChangeFieldModifiers < FieldAction
     attr_accessor :mods
-    @@modvals = { :abstract=>1024, 
+    @@modvals = { 
+      :abstract=>1024, 
       :annotation=>8192, 
       :enum=>16384,
       :final=>16,
@@ -118,7 +136,7 @@ module Hacksaw
       elsif params.include? :field or params.include? :fields then
         modify_fields(params,&blk)
       elsif params.include? :constructor or params.include? :constructors then
-        puts "Mod ctor"
+        puts "Not implemented bro!"
       end  
     end
 
@@ -126,12 +144,17 @@ module Hacksaw
       s = SaveClass.new(path)
       addClassAction(s)
     end
+    
+    def add_method(body)
+      s = AddMethodToClass.new(body)
+      addClassAction(s)
+    end
 
     def modify_methods(params)
       if params.include? :method then
-        methods = params[:method]
+        methods = params[:method].to_s
       elsif params.include? :methods then
-        methods = params[:methods]
+        methods = params[:methods].to_s
       else
         raise "No methods(s) specified to modify"
       end
@@ -148,6 +171,28 @@ module Hacksaw
       addMethodModification(m)
     end
 
+    def modify_fields(params)
+      if params.include? :field then
+        fields = params[:field].to_s
+      elsif params.include? :fields then
+        fields = params[:fields].to_s
+      else
+        raise "No fields(s) specified to modify"
+      end
+    
+      matcher = case fields
+        when String then RubyFieldMatcher.new { |f| f.getName() == fields}
+        when Regexp then RubyFieldMatcher.new { |f| (f.getName() =~ fields) != nil }
+        when Array  then RubyFieldMatcher.new { |f| fields.include?(f.getName()) }
+        else RubyFieldMatcher.new { |f| false }  
+      end
+      f = FieldMod.new(matcher)
+      
+      yield(f) if block_given?
+      addFieldModification(f)
+    end
+
+    
   end
   
   
@@ -281,33 +326,28 @@ include Hacksaw
 #  end
 #end
 
-require 'jruby/core_ext'
-
-class MyTweak
-  def initialize
-    puts "New!!"
-  end
-  def some_method(s)    
-    puts "Hi there"
-  end
-end
-cls = MyTweak.become_java!
-puts cls
-
-#java_require 'MyTweak'
-#include_class Java::rubyobj.MyTweak
 modify :classes=>/com\.quadcs\.hacksaw\.demo\.DemoAccount/ do |c|
-  c.modify :method=>"isValidAccount" do |m|  
-   m.add_line_before 'if(accountNumber.equals("abcd")) { return true; }'
-   #m.add_line_before 'new MyTweak().some_method(this);'
-  end
+    c.modify :field=>"accountNumber" do |f|
+      f.change_modifiers [:public]
+    end
+    
+    c.modify :method=>"isValidAccount" do |m|  
+      m.add_line_before 'if(accountNumber.equals("abcd")) { return true; }'
+    end
+    
+    c.add_method 'public String somethingNew(int dx) { return accountNumber + "." + dx; }'
+    #c.save_to(".")
 end
 
+
+# TO GET THIS TO RUN, YOU WILL NEED TO APPEND THIS AS AN ARG TO JAVA.EXE
+# -javaagent:Hacksaw.jar
 
 #HacksawMain.DEBUG=true
 a = com.quadcs.hacksaw.demo.DemoAccount.new("abcd")
-puts a.isValidAccount()
-#t = com.quadcs.hacksaw.tests.Foo.new()
-#puts t.foo()
-#test.x="Post"
+#puts a.somethingNew(99)
 
+#puts a.getAccountNumber()
+#puts a.accountNumber
+#a.accountNumber = "123"
+#puts a.accountNumber

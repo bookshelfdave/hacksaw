@@ -79,11 +79,10 @@ public class HacksawMain implements ClassFileTransformer {
                     debug("\tLoading class info for " + theClass);
                  
                     for(Object o: l.getAllModifications()) {
-                        System.out.println(o.getClass().getName());
-
+                        debug(o.getClass().getName());
                         if(o instanceof MethodModification) {
                             processMethodMod(l, klass, (MethodModification)o);
-                        } else if (o instanceof FieldModification) {
+                        } else if (o instanceof FieldModification) {                            
                             processFieldMod(l, klass, (FieldModification)o);
                         } else if (o instanceof CtorModification) {
                             processCtorMod(l, klass, (CtorModification)o);
@@ -93,12 +92,6 @@ public class HacksawMain implements ClassFileTransformer {
                         }
                     }
                     
-//                    processClass(l, klass);
-//                    processCtors(l,klass);
-//                    processMethods(l, klass);
-//                    processFields(l,klass);
-//                    // processAnnotations(l,klass);
-
                     byte[] b = klass.toBytecode();
                     klass.detach();
                     
@@ -111,14 +104,6 @@ public class HacksawMain implements ClassFileTransformer {
         }
         return classfileBuffer;
     }
-//
-//    private void processClass(ClassModification l, CtClass klass) {
-//        for (ClassAction ca : l.getClassActions()) {
-//            ca.exec(klass);
-//        }
-//    }
-
-    
     
     private void processCtorMod(ClassModification l, CtClass klass, CtorModification mod) throws NotFoundException {
         Map<String, CtConstructor> allCtors = new HashMap<String, CtConstructor>();
@@ -168,8 +153,7 @@ public class HacksawMain implements ClassFileTransformer {
     }
 
     private void processFieldMod(ClassModification l, CtClass klass, FieldModification mod) throws NotFoundException {
-        Map<String, CtField> allFields = new HashMap<String, CtField>();
-
+        Map<String, CtField> allFields = new HashMap<String, CtField>();        
         // TODO: look into declared vs regular
         // TODO: what about shadowed fields?
         for (CtField f : klass.getDeclaredFields()) {
@@ -179,12 +163,13 @@ public class HacksawMain implements ClassFileTransformer {
         for (CtField f : klass.getFields()) {
             allFields.put(f.getName(), f);
         }
-
-        for (CtField field : allFields.values()) {
-            //for (FieldModification fm : l.getFieldModifications()) {
-              
-                debug("Matching field:" + field.getName() + field.getFieldInfo().getDescriptor());
+        
+        for (CtField field : allFields.values()) {            
+            //for (FieldModification fm : l.getFieldModifications()) {              
+                
+                debug("Trying field:" + field.getName() + ":" + field.getFieldInfo().getDescriptor());
                 if (mod.getFieldMatcher().match(field)) {
+                    debug("Matched field:" + field);
                     for (FieldAction action : mod.getFieldActions()) {
                         action.exec(field);
                     }
@@ -192,7 +177,7 @@ public class HacksawMain implements ClassFileTransformer {
             //}
         }
     }
-
+           
     public static void debug(String message) {
         if (HacksawMain.DEBUG) {
             System.out.println(message);
