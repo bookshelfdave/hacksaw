@@ -34,23 +34,26 @@ import javassist.NotFoundException;
 
 public class HacksawMain implements ClassFileTransformer {
 
-    public static final String version = "0.3 \"Post Zilla\"";
+    public static final String version = "0.3 'Post Zilla'";
     public static Instrumentation sys;
 
+    private static void logo() {
+        System.out.println("                                                            .-......`           ");
+        System.out.println("     `:+osssssssssysyyysyyyyyyyyyyyyyyyyyyyyyyyyyyyysyyyyyyhdmmmmmmms           ");
+        System.out.println("   `+ys/-.............................................:sss+ohddddmmmd:          ");
+        System.out.println("  -yy:    Hacksaw 0.3 'Post Zilla'                    oss.    .ydmmmmds.        ");
+        System.out.println("  sy: (C) 2011- Dave Parfitt. All Rights Reserved    `ss+      .hdmmmmmd+`      ");
+        System.out.println(" `yy.                                            .   `ss/       .ydmmmmmmy.     ");
+        System.out.println(" `yy- Javassist, a Java-bytecode translator toolkit:  -/-        `shmmmmmmd-    ");
+        System.out.println("  yy- (C) 1999- Shigeru Chiba. All Rights Reserved.   -/:/         /hdmmmmmd`   ");
+        System.out.println(" .dmddddddddddddddddddmmmmmmmmmmmmmmmmmmmmmmmmmmmdhoso++o/.         `+hmmmmd.   ");
+        System.out.println("  -:...............................................`.``.//            +dmdh/    ");
+        System.out.println("                                                                       :/-      ");            
+    }
+    
     
     public static void premain(String agentArgs, Instrumentation inst) {
-        System.out.println("--------------------------------------------------------------");
-        System.out.println("Hacksaw V" + version);
-        System.out.println("* Copyright (C) 2011- Dave Parfitt. All Rights Reserved.");
-        System.out.println("*	Version: MPL 1.1");
-        System.out.println("* 	See License.html for details");
-        System.out.println("*	Hacksaw uses the Javassist toolkit:");
-        System.out.println("*Javassist, a Java-bytecode translator toolkit.");
-        System.out.println("* Copyright (C) 1999- Shigeru Chiba. All Rights Reserved.");
-        System.out.println("* 	Version: MPL 1.1");
-        System.out.println("* 	See License.html for details");
-        System.out.println("");
-        System.out.println("--------------------------------------------------------------");
+        logo();
         sys = inst;
         sys.addTransformer(new HacksawMain());
     }
@@ -70,7 +73,7 @@ public class HacksawMain implements ClassFileTransformer {
         String theClass = className.replace("/", ".");
 
         debug("Hacksaw checking class:" + theClass);
-
+        
         for (ClassModification l : listeners) {
             ClassPool cp = ClassPool.getDefault();
             try {

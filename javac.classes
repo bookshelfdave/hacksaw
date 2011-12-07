@@ -6,10 +6,12 @@ src/com/quadcs/hacksaw/CtorMatcher.java
 src/com/quadcs/hacksaw/CtorModification.java
 src/com/quadcs/hacksaw/demo/Bar.java
 src/com/quadcs/hacksaw/demo/DemoAccount.java
+src/com/quadcs/hacksaw/demo/DemoUser.java
 src/com/quadcs/hacksaw/demo/Foo.java
 src/com/quadcs/hacksaw/FieldAction.java
 src/com/quadcs/hacksaw/FieldMatcher.java
 src/com/quadcs/hacksaw/FieldModification.java
+src/com/quadcs/hacksaw/FlatExprEditor.java
 src/com/quadcs/hacksaw/HacksawMain.java
 src/com/quadcs/hacksaw/MethodAction.java
 src/com/quadcs/hacksaw/MethodMatcher.java

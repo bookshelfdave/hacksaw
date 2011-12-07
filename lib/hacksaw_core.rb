@@ -25,6 +25,7 @@ include_class Java::com.quadcs.hacksaw.MethodModification
 include_class Java::com.quadcs.hacksaw.ClassMatcher
 include_class Java::com.quadcs.hacksaw.MethodMatcher
 include_class Java::com.quadcs.hacksaw.FieldMatcher
+include_class Java::com.quadcs.hacksaw.FlatExprEditor
 include_class Java::javassist.ClassPool
 include_class Java::javassist.CtClass
 include_class Java::javassist.CtMethod
@@ -34,81 +35,65 @@ include_class Java::javassist.bytecode.Descriptor
 
 
 module Hacksaw   
-  class SaveClass < ClassAction
-    attr_accessor :path
-    def initialize(path)
-      super()
-      @path = path
-    end
-    
-    def exec(c)
-      puts "Saving class #{c.getName()} to #{@path}"
-      puts "TODO: This is writing to the lib directory!"
-      c.debugWriteFile(@path)
+   
+  
+  module Filter 
+#    attr_accessor :filters
+#    @@filterMethods = 
+#    {
+#    :lower=>"toLowerCase()",       
+#    :upper=>"toUpperCase()"
+#    }           
+
+    def validFilter?(s)
+      allresults = @filters.keys.map do |k|
+        meth = @@filterMethods[k]
+        filter = @filters[k]                        
+        #jval = eval "s.#{meth}.to_s "
+        if s.nil? then 
+            return false
+        end
+        jval = s.instance_eval "#{meth}.to_s"
+        result = case filter
+          when String then return jval == filter
+          when Regexp then return (jval =~ filter) != nil
+          when Array  then return filter.include?(jval)
+          when Proc   then return filter.call(jval)
+          else false
+        end   
+        result
+      end
+      allresults.all? {|x| x == true}
     end
   end
-
-
-  class AddMethodToClass < ClassAction
-    attr_accessor :methoddef
-    def initialize(methoddef)
-      super()
-      @methoddef = methoddef
-    end
-    
-    def exec(c)            
-      m = CtNewMethod.make(@methoddef,c)
-      c.addMethod(m)
-    end
-  end
-
-  class AddFieldToClass < ClassAction
-    attr_accessor :fielddef
-    def initialize(fielddef)
-      super()
-      @fielddef = fielddef
-    end
-    
-    def exec(c)            
-      f = CtField.make(@fielddef,c)
-      c.addField(f)
-    end
-  end
-    
-  class ChangeFieldModifiers < FieldAction
-    attr_accessor :mods
-    @@modvals = { 
-      :abstract=>1024, 
-      :annotation=>8192, 
-      :enum=>16384,
-      :final=>16,
-      :interface=>512,
-      :native=>256,
-      :private=>2,
-      :protected=>4,
-      :public=>1,
-      :static=>8,
-      :strict=>2048,
-      :synchronized=>32,
-      :transient=>128, # is 128 correct for transient AND varargs?
-      :varargs=>128,
-      :volatile=>64
-    }
-    
-    def initialize(mods)
-      super()
-      @mods = mods
-    end
-    
-    def exec(fm)
-      ord = @mods.map {|m| @@modvals[m]}.reduce(:|)
-      puts "Changing modifiers to #{ord}"
-      fm.setModifiers(ord)
-    end
-  end
-
 
   
+  
+   class MethodCallMod < MethodAction
+    include Filter
+    attr_accessor :filters
+    
+    
+#      @@filterMethods = 
+#      {
+#      :classname=>"getClassName()",       
+#      :filename=>"getFileName()", 
+#      :linenumber=>"getLineNumber()",
+#      :methodname=>"getSignature()", 
+#      :signature=>"getSignature()", 
+#      :issuper=>"isSuper()", 
+#      :maythrow=>"mayThrow()"}           
+#    
+    def initialize(filters)    
+      super()
+      @filters = filters
+    end
+    
+    def exec(m)
+      puts "Valid filter check:"
+      #puts validFilter?(m)
+    end
+  end
   
   
   class MethodMod < MethodModification
@@ -123,11 +108,19 @@ module Hacksaw
     def add_line_before(line)  
       a = AddLineBeforeMethod.new(line)
       getMethodActions().add(a)
+    end 
+    
+    def modify_method_calls(params)
+      m = MethodCallMod.new(params)
+      getMethodActions().add(m)
+    end
+    
+    def change_body(params)
+      cmb = ChangeMethodBody.new(params)
+      getMethodActions().add(cmb)
     end
   end
-  
-  
-  
+        
   class FieldMod < FieldModification
     def initialize(matcher)
       super(matcher)
@@ -138,7 +131,6 @@ module Hacksaw
     end
   end
     
-  
   class ClassMod < ClassModification
     def initialize(matcher)
       super(matcher)
@@ -237,8 +229,7 @@ module Hacksaw
       @blk.call(m)
     end
   end
-
-    
+ 
   class RubyFieldMatcher
     include FieldMatcher
     attr_accessor :blk
@@ -250,9 +241,79 @@ module Hacksaw
       @blk.call(f)
     end
   end
-   
+
+  class SaveClass < ClassAction
+    attr_accessor :path
+    def initialize(path)
+      super()
+      @path = path
+    end
     
- 
+    def exec(c)
+      puts "Saving class #{c.getName()} to #{@path}"
+      puts "TODO: This is writing to the lib directory!"
+      c.debugWriteFile(@path)
+    end
+  end
+
+  class AddMethodToClass < ClassAction
+    attr_accessor :methoddef
+    def initialize(methoddef)
+      super()
+      @methoddef = methoddef
+    end
+    
+    def exec(c)            
+      m = CtNewMethod.make(@methoddef,c)
+      c.addMethod(m)
+    end
+  end
+
+  class AddFieldToClass < ClassAction
+    attr_accessor :fielddef
+    def initialize(fielddef)
+      super()
+      @fielddef = fielddef
+    end
+    
+    def exec(c)            
+      f = CtField.make(@fielddef,c)
+      c.addField(f)
+    end
+  end
+    
+  class ChangeFieldModifiers < FieldAction
+    attr_accessor :mods
+    @@modvals = { 
+      :abstract=>1024, 
+      :annotation=>8192, 
+      :enum=>16384,
+      :final=>16,
+      :interface=>512,
+      :native=>256,
+      :private=>2,
+      :protected=>4,
+      :public=>1,
+      :static=>8,
+      :strict=>2048,
+      :synchronized=>32,
+      :transient=>128, # is 128 correct for transient AND varargs?
+      :varargs=>128,
+      :volatile=>64
+    }
+    
+    def initialize(mods)
+      super()
+      @mods = mods
+    end
+    
+    def exec(fm)
+      ord = @mods.map {|m| @@modvals[m]}.reduce(:|)
+      puts "Changing modifiers to #{ord}"
+      fm.setModifiers(ord)
+    end
+  end
+            
   class AddLineAfterMethod < MethodAction
     attr_accessor :line
     def initialize(line) 
@@ -286,6 +347,8 @@ module Hacksaw
   end
 
   
+  
+
   
   
   def modify_classes(params)
@@ -354,7 +417,10 @@ modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
     
     c.modify :method=>"isValidAccount" do |m|  
       m.add_line_before 'if(accountNumber.equals("abcd")) { return true; }'
-    end    
+
+      m.modify_method_calls(:classname=>"java.lang.String",:methodname=>"toUpperCase")
+            
+    end      
     
     c.add_method 'public String somethingNew(int dx) { return accountNumber + "." + z + "." + dx; }'    
     #c.save_to(".")
