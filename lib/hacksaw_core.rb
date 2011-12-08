@@ -13,6 +13,9 @@
 # * License.
 # *
 # * ***** END LICENSE BLOCK ***** */
+
+# Hey - this is a prototype. You will notice a lack of unit tests!
+
 include Java
 require 'Hacksaw.jar'
 include_class Java::com.quadcs.hacksaw.HacksawMain
@@ -45,20 +48,26 @@ module Hacksaw
 #    :upper=>"toUpperCase()"
 #    }           
 
-    def validFilter?(s)
-      allresults = @filters.keys.map do |k|
-        meth = @@filterMethods[k]
-        filter = @filters[k]                        
+    def filtermethods(k)      
+      
+    end
+    
+    def validFilter?(s)      
+      allresults = @filters.keys.map do |k|              
+        meth = filtermethods(k)
+        filter = filters[k]                        
         #jval = eval "s.#{meth}.to_s "
-        if s.nil? then 
+        if s.nil? then                     
             return false
         end
-        jval = s.instance_eval "#{meth}.to_s"
+        expr = "#{meth}.to_s"        
+        jval = s.instance_eval expr
+        
         result = case filter
-          when String then return jval == filter
-          when Regexp then return (jval =~ filter) != nil
-          when Array  then return filter.include?(jval)
-          when Proc   then return filter.call(jval)
+          when String then jval == filter
+          when Regexp then (jval =~ filter) != nil
+          when Array  then filter.include?(jval)
+          when Proc   then filter.call(jval)
           else false
         end   
         result
@@ -68,32 +77,48 @@ module Hacksaw
   end
 
   
+   class MethodCallMod  < FlatExprEditor
+     include MethodAction    
+     include Filter
+         
+     attr_accessor :filters
+     attr_accessor :blk
+     def initialize(filters,&blk)
+       super()       
+       @filters =filters
+       @blk = blk
+     end
+
+     ## I'm sure this is bad code!
+     ## is there a better way to do this?
+    def filtermethods(k)      
+      {
+      :classname=>"getClassName()",       
+      :filename=>"getFileName()", 
+      :linenumber=>"getLineNumber()",
+      :methodname=>"getMethodName()", 
+      :signature=>"getSignature()", 
+      :issuper=>"isSuper()", 
+      :maythrow=>"mayThrow()"}[k]
+    end 
+   
+     def edit_methodcall(mc)              
+       if validFilter?(mc) then         
+         code = @blk.call()
+         #mc.replace("{ $_ = $0.toLowerCase(); }")
+         mc.replace(code)
+       end
+     end
+
+    def exec(m)      
+      m.instrument(self) 
+    end
+
+   end
   
-   class MethodCallMod < MethodAction
-    include Filter
-    attr_accessor :filters
+  
     
-    
-#      @@filterMethods = 
-#      {
-#      :classname=>"getClassName()",       
-#      :filename=>"getFileName()", 
-#      :linenumber=>"getLineNumber()",
-#      :methodname=>"getSignature()", 
-#      :signature=>"getSignature()", 
-#      :issuper=>"isSuper()", 
-#      :maythrow=>"mayThrow()"}           
-#    
-    def initialize(filters)    
-      super()
-      @filters = filters
-    end
-    
-    def exec(m)
-      puts "Valid filter check:"
-      #puts validFilter?(m)
-    end
-  end
+
   
   
   class MethodMod < MethodModification
@@ -110,8 +135,8 @@ module Hacksaw
       getMethodActions().add(a)
     end 
     
-    def modify_method_calls(params)
-      m = MethodCallMod.new(params)
+    def modify_method_calls(params,&blk)
+      m = MethodCallMod.new(params,&blk)
       getMethodActions().add(m)
     end
     
@@ -163,18 +188,18 @@ module Hacksaw
     
     def modify_methods(params)
       if params.include? :method then
-        methods = params[:method].to_s
+        methods = params[:method]
       elsif params.include? :methods then
-        methods = params[:methods].to_s
+        methods = params[:methods]
       else
         raise "No methods(s) specified to modify"
       end
-    
+      
       matcher = case methods
-      when String then RubyMethodMatcher.new { |m| m.getName() == methods}
-      when Regexp then RubyMethodMatcher.new { |m| (m.getName() =~ methods) != nil }
-      when Array  then RubyMethodMatcher.new { |m| methods.include?(m.getName()) }
-      else RubyMethodMatcher.new { |m| false }  
+        when String then RubyMethodMatcher.new { |m| m.getName() == methods}
+        when Regexp then RubyMethodMatcher.new { |m| (m.getName() =~ methods) != nil }
+        when Array  then RubyMethodMatcher.new { |m| methods.include?(m.getName()) }
+        else RubyMethodMatcher.new { |m| false }  
       end
       m = MethodMod.new(matcher)
       
@@ -184,9 +209,9 @@ module Hacksaw
 
     def modify_fields(params)
       if params.include? :field then
-        fields = params[:field].to_s
+        fields = params[:field]
       elsif params.include? :fields then
-        fields = params[:fields].to_s
+        fields = params[:fields]
       else
         raise "No fields(s) specified to modify"
       end
@@ -314,7 +339,8 @@ module Hacksaw
     end
   end
             
-  class AddLineAfterMethod < MethodAction
+  class AddLineAfterMethod 
+    include MethodAction
     attr_accessor :line
     def initialize(line) 
       super()
@@ -330,7 +356,8 @@ module Hacksaw
     end
   end
 
-  class AddLineBeforeMethod < MethodAction
+  class AddLineBeforeMethod 
+    include MethodAction
     attr_accessor :line
     def initialize(line) 
       super()
@@ -416,10 +443,7 @@ modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
     end
     
     c.modify :method=>"isValidAccount" do |m|  
-      m.add_line_before 'if(accountNumber.equals("abcd")) { return true; }'
-
-      m.modify_method_calls(:classname=>"java.lang.String",:methodname=>"toUpperCase")
-            
+      m.add_line_before 'if(accountNumber.equals("abcd")) { return true; }'          
     end      
     
     c.add_method 'public String somethingNew(int dx) { return accountNumber + "." + z + "." + dx; }'    
@@ -427,23 +451,30 @@ modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
 end
 
 modify :classes=>/com.quadcs.hacksaw.demo.[FB][a-z]+/ do |c| 
-  c.add_field 'public String mynewfield = "Hello world";'  
+  c.add_field 'public String mynewfield = "Hello world";'    
+  
+  c.modify :method=>/getFoo/ do |m|        
+      m.modify_method_calls :classname=>"java.lang.String",:methodname=>"toUpperCase" do
+         "{ $_ = $0.toLowerCase(); }"
+    end
+  end      
 end
-
 
 # TO GET THIS TO RUN, YOU WILL NEED TO APPEND THIS AS AN ARG TO JAVA.EXE
 # -javaagent:Hacksaw.jar
 
-#HacksawMain.DEBUG=true
-a = com.quadcs.hacksaw.demo.DemoAccount.new("abcd")
-puts a.z
-puts a.somethingNew(99)
 
+#HacksawMain.DEBUG=true
+#a = com.quadcs.hacksaw.demo.DemoAccount.new("abcd")
+#puts a.z
+#puts a.somethingNew(99)
 foo = com.quadcs.hacksaw.demo.Foo.new()
 bar = com.quadcs.hacksaw.demo.Bar.new()
-puts foo.mynewfield
-puts bar.mynewfield
+#puts foo.mynewfield
+#puts bar.mynewfield
 
+puts "-->#{bar.getFoo()}"
+puts "-->#{bar.getFoobar()}"
 #puts a.getAccountNumber()
 #puts a.accountNumber
 #a.accountNumber = "123"

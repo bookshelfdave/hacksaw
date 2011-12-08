@@ -143,7 +143,7 @@ public class HacksawMain implements ClassFileTransformer {
         for (CtMethod m : klass.getMethods()) {
             allMethods.put(m.getLongName(), m);
         }
-        for (CtMethod method : allMethods.values()) {
+        for (CtMethod method : allMethods.values()) {            
             //for (MethodModification mm : l.getMethodModifications()) {
                 debug("Matching method:" + method.getName() + method.getMethodInfo().getDescriptor());
                 if (mod.getMethodMatcher().match(method)) {

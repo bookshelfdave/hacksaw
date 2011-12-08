@@ -18,5 +18,14 @@
 package com.quadcs.hacksaw.demo;
 
 public class Bar {
-    public String foo = "FOO";
+    public String foo = "foo";
+
+    public String getFoo() {
+        return foo.toUpperCase();
+    }            
+
+    public String getFoobar() {
+        return "Foobar says:" + foo.toUpperCase() + "!!!";
+    }            
+   
 }

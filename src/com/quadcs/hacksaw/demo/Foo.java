@@ -34,7 +34,7 @@ public class Foo {
 
     public String foo() {
         int s = doSomething(4,5);
-        return "Foo:" + s + myString;
+        return "Foo:" + s + myString.toUpperCase();
     }
 
     

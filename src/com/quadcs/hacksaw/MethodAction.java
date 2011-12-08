@@ -17,15 +17,13 @@ package com.quadcs.hacksaw;
 
 import javassist.CtMethod;
 
-public class MethodAction {
+public interface MethodAction {
 	
 	
-        public MethodAction() {
-		
-	}
+//        public MethodAction() {
+//		
+//	}
 	
 
-	public void exec(CtMethod c) {
-            
-        }
+	public void exec(CtMethod c);                    
 }
