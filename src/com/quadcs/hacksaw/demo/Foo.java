@@ -17,7 +17,7 @@
 package com.quadcs.hacksaw.demo;
 
 public class Foo {
-
+ 
     private String myString = "Foo!";
 
     private int doSomething(int a, int b) {
@@ -32,9 +32,8 @@ public class Foo {
         return myString;
     }
 
-    public String foo() {
-        int s = doSomething(4,5);
-        return "Foo:" + s + myString.toUpperCase();
+    public String foo() {        
+        return "Foo:" + myString.toUpperCase();
     }
 
     

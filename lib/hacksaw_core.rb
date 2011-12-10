@@ -16,6 +16,8 @@
 
 # Hey - this is a prototype. You will notice a lack of unit tests!
 
+# TODO: Method action is an interface... need to clean up FieldAction, CtorAction etc.
+
 include Java
 require 'Hacksaw.jar'
 include_class Java::com.quadcs.hacksaw.HacksawMain
@@ -29,6 +31,7 @@ include_class Java::com.quadcs.hacksaw.ClassMatcher
 include_class Java::com.quadcs.hacksaw.MethodMatcher
 include_class Java::com.quadcs.hacksaw.FieldMatcher
 include_class Java::com.quadcs.hacksaw.FlatExprEditor
+
 include_class Java::javassist.ClassPool
 include_class Java::javassist.CtClass
 include_class Java::javassist.CtMethod
@@ -36,20 +39,40 @@ include_class Java::javassist.CtField
 include_class Java::javassist.CtNewMethod
 include_class Java::javassist.bytecode.Descriptor
 
+include_class Java::javassist.bytecode.Mnemonic
+include_class Java::javassist.bytecode.CodeAttribute
+include_class Java::javassist.bytecode.CodeIterator
 
-module Hacksaw   
-   
+
+module Hacksaw    
+  
+  def enable_hacksaw
+    com.quadcs.hacksaw.HacksawMain.enabled = true
+  end
+
+  def disable_hacksaw
+    com.quadcs.hacksaw.HacksawMain.enabled = false
+  end
+  
+  def hacksaw_enabled?
+    com.quadcs.hacksaw.HacksawMain.enabled
+  end
+
+  def show_matches_enable
+    com.quadcs.hacksaw.HacksawMain.showMatches = true
+  end
+
+  def show_matches_disabled
+    com.quadcs.hacksaw.HacksawMain.showMatches = false
+  end
+  
+  def show_matches_enabled?
+    com.quadcs.hacksaw.HacksawMain.showMatches
+  end
+
   
   module Filter 
-#    attr_accessor :filters
-#    @@filterMethods = 
-#    {
-#    :lower=>"toLowerCase()",       
-#    :upper=>"toUpperCase()"
-#    }           
-
     def filtermethods(k)      
-      
     end
     
     def validFilter?(s)      
@@ -113,14 +136,9 @@ module Hacksaw
     def exec(m)      
       m.instrument(self) 
     end
-
    end
   
-  
-    
 
-  
-  
   class MethodMod < MethodModification
     def initialize(matcher)
       super(matcher)
@@ -134,6 +152,17 @@ module Hacksaw
       a = AddLineBeforeMethod.new(line)
       getMethodActions().add(a)
     end 
+
+    def show_bytecode()  
+      a = ListBytecode.new()
+      getMethodActions().add(a)
+    end 
+
+    def map_bytecode(&block)  
+      a = MapBytecode.new(&block)
+      getMethodActions().add(a)
+    end 
+    
     
     def modify_method_calls(params,&blk)
       m = MethodCallMod.new(params,&blk)
@@ -334,7 +363,7 @@ module Hacksaw
     
     def exec(fm)
       ord = @mods.map {|m| @@modvals[m]}.reduce(:|)
-      puts "Changing modifiers to #{ord}"
+      #puts "Changing modifiers to #{ord}"
       fm.setModifiers(ord)
     end
   end
@@ -356,6 +385,56 @@ module Hacksaw
     end
   end
 
+  
+  class ListBytecode
+    include MethodAction
+
+    def initialize
+      super()
+    end
+    
+    def exec(m)
+      #cf = m.getDeclaringClass().getClassFile()
+      ca = m.getMethodInfo().getCodeAttribute()
+      ci = ca.iterator()
+      while ci.hasNext()
+          index = ci.next()
+          ca = ci.get()          
+          op = ci.byteAt(index)
+          puts "#{Mnemonic.OPCODE[op]}"
+                              
+      end
+    end
+  end
+
+  class MapBytecode
+    include MethodAction
+    attr_accessor :blk
+    def initialize(&block)
+      super()
+      @blk = block
+    end
+    
+    def exec(m)
+      ca = m.getMethodInfo().getCodeAttribute()
+      ci = ca.iterator()
+      while ci.hasNext()
+          index = ci.next()
+          ca = ci.get()          
+          op = ci.byteAt(index)
+          #puts "Length: #{ci.codeLength()}"
+          atts = ci.get().getAttributes()
+          
+          atthash = atts.map { |a| {:attname=>a.getName(),:data=>a.get().to_s } }
+          
+          val = @blk.call(op, Mnemonic.OPCODE[op],atthash)         
+          #puts "-->#{val.class.name}"
+          ci.writeByte(val,index)          
+      end
+    end
+  end
+
+  
   class AddLineBeforeMethod 
     include MethodAction
     attr_accessor :line
@@ -372,11 +451,6 @@ module Hacksaw
       end
     end
   end
-
-  
-  
-
-  
   
   def modify_classes(params)
     if params.include? :class then
@@ -388,10 +462,10 @@ module Hacksaw
     end
 
     matcher = case classes
-    when String then RubyClassMatcher.new { |c| c.getName() == classes}
-    when Regexp then RubyClassMatcher.new { |c| (c.getName() =~ classes) != nil }
-    when Array  then RubyClassMatcher.new { |c| classes.include?(c.getName()) }
-    else RubyClassMatcher.new { |name| false }  
+      when String then RubyClassMatcher.new { |c| c.getName() == classes}
+      when Regexp then RubyClassMatcher.new { |c| (c.getName() =~ classes) != nil }
+      when Array  then RubyClassMatcher.new { |c| classes.include?(c.getName()) }
+      else RubyClassMatcher.new { |name| false }  
     end
     
     c = ClassMod.new(matcher)
@@ -413,69 +487,3 @@ module Hacksaw
 
   
 end
-
-include Hacksaw
-
-
-#modify :classes=>/com\.quadcs\.hacksaw\.tests\.*/,extends=>/com\.quadcs\.hacksaw\.tests\.*/ do |c|
-#  c.modify :field=>"Foo", :type=>/java\.lang\.*/ do |f|
-#    f.change_modifiers [:public]
-#  end  
-#  
-#  c.modify :constructor=>/.*/ do |ctor|
-#    ctor.add_line_before 'System.out.println("Hello from a constructor");'
-#  end
-
-
-
-#modify :classes=>/com\.quadcs\.hacksaw\.tests\.*/ do |c|
-#  c.modify :method=>"foo", :params=>["java.lang.String",/.*/] do |m|
-#    m.add_line_before 'System.out.println("Hello World");'
-#    m.add_line_after 'System.out.println("Goodbye world y");'
-#  end
-#end
-
-modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
-    c.add_field 'public int z = 0;'  
-
-    c.modify :field=>"accountNumber" do |f|
-      f.change_modifiers [:public]
-    end
-    
-    c.modify :method=>"isValidAccount" do |m|  
-      m.add_line_before 'if(accountNumber.equals("abcd")) { return true; }'          
-    end      
-    
-    c.add_method 'public String somethingNew(int dx) { return accountNumber + "." + z + "." + dx; }'    
-    #c.save_to(".")
-end
-
-modify :classes=>/com.quadcs.hacksaw.demo.[FB][a-z]+/ do |c| 
-  c.add_field 'public String mynewfield = "Hello world";'    
-  
-  c.modify :method=>/getFoo/ do |m|        
-      m.modify_method_calls :classname=>"java.lang.String",:methodname=>"toUpperCase" do
-         "{ $_ = $0.toLowerCase(); }"
-    end
-  end      
-end
-
-# TO GET THIS TO RUN, YOU WILL NEED TO APPEND THIS AS AN ARG TO JAVA.EXE
-# -javaagent:Hacksaw.jar
-
-
-#HacksawMain.DEBUG=true
-#a = com.quadcs.hacksaw.demo.DemoAccount.new("abcd")
-#puts a.z
-#puts a.somethingNew(99)
-foo = com.quadcs.hacksaw.demo.Foo.new()
-bar = com.quadcs.hacksaw.demo.Bar.new()
-#puts foo.mynewfield
-#puts bar.mynewfield
-
-puts "-->#{bar.getFoo()}"
-puts "-->#{bar.getFoobar()}"
-#puts a.getAccountNumber()
-#puts a.accountNumber
-#a.accountNumber = "123"
-#puts a.accountNumber

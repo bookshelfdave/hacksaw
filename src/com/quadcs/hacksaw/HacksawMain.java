@@ -36,7 +36,9 @@ public class HacksawMain implements ClassFileTransformer {
 
     public static final String version = "0.3 'Post Zilla'";
     public static Instrumentation sys;
-
+    public static boolean enabled = true;
+    public static boolean showMatches = false;
+    
     private static void logo() {
         System.out.println("                                                            .-......`           ");
         System.out.println("     `:+osssssssssysyyysyyyyyyyyyyyyyyyyyyyyyyyyyyyysyyyyyyhdmmmmmmms           ");
@@ -69,7 +71,10 @@ public class HacksawMain implements ClassFileTransformer {
     public byte[] transform(ClassLoader loader, String className,
             Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
             byte[] classfileBuffer) throws IllegalClassFormatException {
-
+        if(!enabled) {
+            return classfileBuffer;
+        }
+        
         String theClass = className.replace("/", ".");
 
         debug("Hacksaw checking class:" + theClass);
@@ -120,9 +125,9 @@ public class HacksawMain implements ClassFileTransformer {
        
         for (CtConstructor ctor : allCtors.values()) {
             //for (CtorModification cm : l.getCtorModifications()) {
-                debug("Matching method:" + ctor.getName() + ctor.getMethodInfo().getDescriptor());
+                debug("Matching method:" + ctor.getName() +":"+ ctor.getMethodInfo().getDescriptor());
                 if (mod.getCtorMatcher().match(ctor)) {
-
+                    traceMatch(ctor.getName() +":"+ ctor.getMethodInfo().getDescriptor());
                     for (CtorAction action : mod.getCtorActions()) {
                         action.exec(ctor);
                     }
@@ -145,8 +150,9 @@ public class HacksawMain implements ClassFileTransformer {
         }
         for (CtMethod method : allMethods.values()) {            
             //for (MethodModification mm : l.getMethodModifications()) {
-                debug("Matching method:" + method.getName() + method.getMethodInfo().getDescriptor());
+                debug("Matching method:" + method.getName() + ":" + method.getMethodInfo().getDescriptor());
                 if (mod.getMethodMatcher().match(method)) {
+                    traceMatch(method.getName() + ":" + method.getMethodInfo().getDescriptor());
                     for (MethodAction action : mod.getMethodActions()) {
                         action.exec(method);
                     }
@@ -168,11 +174,10 @@ public class HacksawMain implements ClassFileTransformer {
         }
         
         for (CtField field : allFields.values()) {            
-            //for (FieldModification fm : l.getFieldModifications()) {              
-                
+            //for (FieldModification fm : l.getFieldModifications()) {                              
                 debug("Trying field:" + field.getName() + ":" + field.getFieldInfo().getDescriptor());
                 if (mod.getFieldMatcher().match(field)) {
-                    debug("Matched field:" + field);
+                    traceMatch("Matched field:" + field);
                     for (FieldAction action : mod.getFieldActions()) {
                         action.exec(field);
                     }
@@ -184,6 +189,12 @@ public class HacksawMain implements ClassFileTransformer {
     public static void debug(String message) {
         if (HacksawMain.DEBUG) {
             System.out.println(message);
+        }
+    }
+    
+    public static void traceMatch(String message) {
+        if (HacksawMain.showMatches) {
+            System.out.println("Hacksaw Match: " + message);
         }
     }
 }

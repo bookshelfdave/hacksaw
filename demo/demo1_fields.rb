@@ -1,5 +1,5 @@
 include Java # not really needed
-require 'lib\\hacksaw_core.rb'
+require 'lib/hacksaw_core.rb'
 include Hacksaw
 
 # Java must be passed this parameter:
@@ -8,6 +8,7 @@ include Hacksaw
 # -J-javaagent:Hacksaw.jar
 
 #disable_hacksaw
+#show_matches_enable
 
 modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
     c.add_field 'public boolean active = false;'  
@@ -16,8 +17,10 @@ modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
     end
 end
 
-
 account = com.quadcs.hacksaw.demo.DemoAccount.new("abcd")
 puts "Valid account? #{account.isValidAccount()}"
 puts "Is the account active? #{account.active}"
+account.active = true
+puts "Is the account active? #{account.active}"
+
 

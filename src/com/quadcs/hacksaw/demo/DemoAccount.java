@@ -23,6 +23,7 @@ import static org.junit.Assert.*;
 public final class DemoAccount {
     private String accountNumber;
     private String pattern = "\\d\\d\\d\\d";
+    float balance = 0.0f;
     
     public DemoAccount(String acct) {
         this.accountNumber = acct;
@@ -48,5 +49,23 @@ public final class DemoAccount {
         assertFalse(new DemoAccount("").isValidAccount());
         assertFalse(new DemoAccount(null).isValidAccount());
     }
+        
+    public float getBalance() {
+        return balance;
+    }
     
+    public void deposit(float v) throws Exception {
+        if(v <= 0) {
+            throw new Exception("Can't deposit <0 $!");
+        }
+        balance += v;
+    }
+
+    public void withdraw(float v) throws Exception {
+        if(v <= 0) {
+            throw new Exception("Can't withdraw <0 $!");
+        }
+        balance += v;
+    }
+
 }
