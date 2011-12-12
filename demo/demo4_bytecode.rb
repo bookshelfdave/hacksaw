@@ -10,15 +10,11 @@ include Hacksaw
 #disable_hacksaw
 #show_matches_enable
 modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
-    c.modify :method=>"deposit" do |m|                      
-        # this replaces ALL exceptions thrown with a NOP        
-        #m.show_bytecode
-        m.map_bytecode do |bytes,op,atts|         
-          if op == "athrow" then
-            0
-          else
-            bytes  
-          end          
+    c.modify :method=>"deposit" do |m|                          
+        # this replaces ALL exceptions thrown with a NOP *and* a POP      
+        #m.show_bytecode 
+        m.map_bytecode do |bytes,op|         
+          op == "athrow" ? 0 : bytes          
         end        
     end    
     #c.save_to("hacksaw")
@@ -29,3 +25,4 @@ puts account.getAccountNumber()
 puts account.getBalance()
 account.deposit(-100)
 puts account.getBalance()
+  

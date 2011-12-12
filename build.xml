@@ -17,24 +17,25 @@
         
     <target name="default" depends="build">
         <mkdir dir="dist"/>
-        <mkdir dir="dist\src"/>
+        <mkdir dir="dist/src"/>
         <copy todir="dist">
-            <fileset dir="build/classes"/>
+            <fileset dir="build"/>
         </copy>
         
-        <copy todir="dist\src">
-            <fileset dir="javassist\src"/>
+        <copy todir="dist/src">
+            <fileset dir="javassist/src"/>
             <fileset dir="src"/>
         </copy>
         <copy todir="dist">
-            <fileset file="javalibs\Javassist_Readme.html"/>
+            <fileset file="javalibs/Javassist_Readme.html"/>
             <fileset file="License.html"/>
         </copy>
-        <unjar src="javalibs\javassist.jar" dest="dist"/>
+        <unjar src="javalibs/javassist.jar" dest="dist"/>
         <jar manifest="MANIFEST.MF" destfile="Hacksaw.jar" basedir="dist"/>
     </target>    
         
     <target name="build">
+         <mkdir dir="build"/>
         <javac 
             includeantruntime="false"
             srcdir="src" 

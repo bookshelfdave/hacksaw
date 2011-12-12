@@ -42,7 +42,7 @@ include_class Java::javassist.bytecode.Descriptor
 include_class Java::javassist.bytecode.Mnemonic
 include_class Java::javassist.bytecode.CodeAttribute
 include_class Java::javassist.bytecode.CodeIterator
-
+include_class Java::javassist.bytecode.Bytecode
 
 module Hacksaw    
   
@@ -401,7 +401,7 @@ module Hacksaw
           index = ci.next()
           ca = ci.get()          
           op = ci.byteAt(index)
-          puts "#{Mnemonic.OPCODE[op]}"
+          puts "#{Mnemonic.OPCODE[op]}:#{ci.getCodeLength()}"
                               
       end
     end
@@ -426,11 +426,22 @@ module Hacksaw
           atts = ci.get().getAttributes()
           
           atthash = atts.map { |a| {:attname=>a.getName(),:data=>a.get().to_s } }
+          #puts atthash
+          val = @blk.call(op, Mnemonic.OPCODE[op],atthash)        
+          if val == 0 then
+            bc = Bytecode.new(ca.getConstPool(),0,0)
+            bc.addOpcode(Bytecode::POP)  
+            #bc.addOpcode(Bytecode::NOP)
+            ci.writeByte(0,index)         
+            #ci.writeByte(Bytecode::POP,index)
+            ci.insertAt(index,bc.get())
+          else
+            ci.writeByte(val,index)          
+          end
           
-          val = @blk.call(op, Mnemonic.OPCODE[op],atthash)         
-          #puts "-->#{val.class.name}"
-          ci.writeByte(val,index)          
+         #puts "-->#{val.class.name}"
       end
+      ca.computeMaxStack()
     end
   end
 
