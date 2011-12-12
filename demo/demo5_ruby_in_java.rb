@@ -12,7 +12,7 @@ include Hacksaw
 modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
     c.modify :method=>"getBetterAccountNumber" do |m|                          
       m.add_callback_before ["$1"] do |x|
-        puts "This is a Ruby block in your Java method: #{x}"
+        puts "This is a Ruby block in your Java method: #{x[0]} <<<<"
       end
     end    
 end
