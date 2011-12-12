@@ -35,6 +35,5 @@ public class Foo {
     public String foo() {        
         return "Foo:" + myString.toUpperCase();
     }
-
     
 }

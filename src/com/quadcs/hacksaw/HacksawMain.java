@@ -20,11 +20,14 @@ import java.io.ByteArrayInputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
@@ -38,6 +41,8 @@ public class HacksawMain implements ClassFileTransformer {
     public static Instrumentation sys;
     public static boolean enabled = true;
     public static boolean showMatches = false;
+    public static List<ProcStub> methodCallbacks = new ArrayList<ProcStub>();
+    private static boolean started = false;
     
     private static void logo() {
         System.out.println("                                                            .-......`           ");
@@ -56,12 +61,22 @@ public class HacksawMain implements ClassFileTransformer {
     
     public static void premain(String agentArgs, Instrumentation inst) {
         logo();
+         
         sys = inst;
         sys.addTransformer(new HacksawMain());
     }
     private static Set<ClassModification> listeners = new HashSet<ClassModification>();
     public static boolean DEBUG = false;
 
+    public static int registerMethodCallback(ProcStub s) {       
+        methodCallbacks.add(s);
+        return methodCallbacks.size()-1;
+    }
+    
+    public static ProcStub getMethodCallback(int index) {
+        return methodCallbacks.get(index);
+    }
+    
     public static void registerMod(ClassModification cl) {
         debug("Registering Hacksaw Listener:" + cl.getClass().getName());
         listeners.add(cl);
@@ -74,13 +89,25 @@ public class HacksawMain implements ClassFileTransformer {
         if(!enabled) {
             return classfileBuffer;
         }
-        
+        if(!started) {
+            started = true;
+            System.out.println("Adding system classpath!");
+            
+            ClassPool cp = ClassPool.getDefault();
+          
+            cp.insertClassPath(new ClassClassPath(this.getClass()));
+            cp.appendSystemPath(); 
+            cp.importPackage("com.quadcs.hacksaw");
+        }
         String theClass = className.replace("/", ".");
 
         debug("Hacksaw checking class:" + theClass);
         
         for (ClassModification l : listeners) {
             ClassPool cp = ClassPool.getDefault();
+            cp.insertClassPath(new ClassClassPath(this.getClass()));
+            cp.appendSystemPath(); 
+            cp.importPackage("com.quadcs.hacksaw");
             try {
                 CtClass klass = cp.makeClass(new ByteArrayInputStream(classfileBuffer));
                 if (l.getClassMatcher().match(klass)) {

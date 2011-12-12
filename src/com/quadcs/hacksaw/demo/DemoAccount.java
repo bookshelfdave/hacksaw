@@ -40,6 +40,10 @@ public final class DemoAccount {
     public String getAccountNumber() {
         return accountNumber;
     }
+    
+    public String getBetterAccountNumber(String s) {
+        return s;
+    }
 
     @Test
     public void testAccounts() throws Exception {

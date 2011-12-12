@@ -16,8 +16,10 @@ def inst(data,bytes=0,index=0)
 end
 
 
+#a = [inst(:nop), inst(:pop,0,1),inst(:pop)]
+#a.map {|x| puts x.index}
 
-a = [inst(:nop), inst(:pop,0,1),inst(:pop)]
-a.map {|x| puts x.index}
+a = Proc.new do |x,y,z|
+  
+end
 
-#bytes << opcode(:nop) << opcode(:pop)

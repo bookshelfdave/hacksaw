@@ -34,6 +34,7 @@ include_class Java::com.quadcs.hacksaw.MethodMatcher
 include_class Java::com.quadcs.hacksaw.FieldMatcher
 include_class Java::com.quadcs.hacksaw.CtorMatcher
 include_class Java::com.quadcs.hacksaw.FlatExprEditor
+include_class Java::com.quadcs.hacksaw.ProcStub
 
 include_class Java::javassist.ClassPool
 include_class Java::javassist.CtClass
@@ -102,6 +103,22 @@ module Hacksaw
     end
   end
 
+  class RProcStub
+    include ProcStub
+    attr_accessor :params
+    attr_accessor :blk
+    
+    def initialize(params,blk)
+      super()   
+      @blk = blk
+      @params = params
+    end
+    
+    def call(params)
+      # TODO: No params being called yet
+      @blk.call(params)
+    end
+  end
   
    class MethodCallMod  < FlatExprEditor
      include MethodAction    
@@ -173,6 +190,11 @@ module Hacksaw
       getMethodActions().add(a)
     end
 
+    def add_callback_before(params,&blk)
+      a = AddCallbackBeforeMethod.new(params,&blk)
+      getMethodActions().add(a)
+    end
+    
     def add_line_before(line)  
       a = AddLineBeforeMethod.new(line)
       getMethodActions().add(a)
@@ -365,7 +387,7 @@ module Hacksaw
     
     def exec(c)
       puts "Saving class #{c.getName()} to #{@path}"
-      puts "TODO: This is writing to the lib directory!"
+      #puts "TODO: This is writing to the lib directory!"
       c.debugWriteFile(@path)
     end
   end
@@ -427,7 +449,26 @@ module Hacksaw
       fm.setModifiers(ord)
     end
   end
-            
+        
+  
+  
+  class AddCallbackBeforeMethod
+    include MethodAction
+    attr_accessor :blk
+    
+    def initialize(params, &blk)
+      @params = params
+      @blk = blk
+    end
+    
+    def exec(m)
+      p = RProcStub.new(@params,@blk)            
+      id = HacksawMain.registerMethodCallback(p)      
+      #m.insertBefore("System.out.println(\"FOO\");");     
+      m.insertBefore("com.quadcs.hacksaw.HacksawMain.getMethodCallback(#{id}).call($args);")
+    end
+  end
+  
   class AddLineBeforeMethod 
     include MethodAction
     attr_accessor :line
