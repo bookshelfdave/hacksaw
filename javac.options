@@ -1,4 +1,4 @@
 -d dist
 -g
 -sourcepath src
--classpath javalibs/javassist.jar;javalibs/junit-4.8.2.jar
+-classpath javalibs/javassist.jar:javalibs/junit-4.8.2.jar

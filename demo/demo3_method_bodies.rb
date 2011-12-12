@@ -11,7 +11,7 @@ include Hacksaw
 #show_matches_enable
 
 modify :classes=>/com.quadcs.hacksaw.demo.[FB][a-z]+/ do |c| 
-  c.add_field 'public String mynewfield = "Hello world";'    
+  c.add_field 'public String mynewfield = "Goodbye world";'    
   
   c.modify :method=>/getFoo/ do |m|        
       m.modify_method_calls :classname=>"java.lang.String",:methodname=>"toUpperCase" do
@@ -21,5 +21,6 @@ modify :classes=>/com.quadcs.hacksaw.demo.[FB][a-z]+/ do |c|
 end
 
 b = com.quadcs.hacksaw.demo.Bar.new()
+puts "MyNewField = #{b.mynewfield}"
 puts b.getFoo()
 puts b.getFoobar()

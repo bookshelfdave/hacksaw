@@ -16,11 +16,6 @@ package com.quadcs.hacksaw;
 
 import javassist.CtConstructor;
 
-public class CtorAction {
-    public CtorAction() {
-        
-    }
-    public void exec(CtConstructor c) {
-            
-    }    
+public interface CtorAction {
+    public void exec(CtConstructor c);
 }

@@ -10,8 +10,12 @@ include Hacksaw
 #disable_hacksaw
 #show_matches_enable
 modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
-    c.add_field 'public int secret = 0;'  
+    c.add_field 'public int secret = 99;'  
     
+    c.modify :constructors=>/.*/ do |ctor|
+      ctor.add_line_before 'System.out.println("In yer constructor!");'
+    end
+  
     c.modify :field=>"accountNumber" do |f| 
       f.change_modifiers [:public] 
     end
@@ -24,7 +28,7 @@ modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
       public String generateSwissAccountNumber(int salt) { 
         return accountNumber + "." + secret + "." + salt; 
       }'    
-    c.save_to("hacksaw")
+    #c.save_to("hacksaw")
 end
 
 account = com.quadcs.hacksaw.demo.DemoAccount.new("abcd")
@@ -34,7 +38,3 @@ puts "The Swiss bank account number is : #{account.generateSwissAccountNumber(12
 account.accountNumber = "DAVESACCT"
 puts "The Swiss bank account number is : #{account.generateSwissAccountNumber(123)}"
 
-#foo = com.quadcs.hacksaw.demo.Foo.new()
-#bar = com.quadcs.hacksaw.demo.Bar.new()
-#puts foo.mynewfield
-#puts bar.mynewfield

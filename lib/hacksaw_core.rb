@@ -24,12 +24,15 @@ include_class Java::com.quadcs.hacksaw.HacksawMain
 include_class Java::com.quadcs.hacksaw.ClassAction
 include_class Java::com.quadcs.hacksaw.MethodAction
 include_class Java::com.quadcs.hacksaw.FieldAction
+include_class Java::com.quadcs.hacksaw.CtorAction
 include_class Java::com.quadcs.hacksaw.ClassModification
 include_class Java::com.quadcs.hacksaw.FieldModification
 include_class Java::com.quadcs.hacksaw.MethodModification
+include_class Java::com.quadcs.hacksaw.CtorModification
 include_class Java::com.quadcs.hacksaw.ClassMatcher
 include_class Java::com.quadcs.hacksaw.MethodMatcher
 include_class Java::com.quadcs.hacksaw.FieldMatcher
+include_class Java::com.quadcs.hacksaw.CtorMatcher
 include_class Java::com.quadcs.hacksaw.FlatExprEditor
 
 include_class Java::javassist.ClassPool
@@ -138,6 +141,24 @@ module Hacksaw
     end
    end
   
+  
+   class CtorMod < CtorModification
+    def initialize(matcher)
+      super(matcher)
+    end
+    def add_line_after(line)
+      a = AddLineAfterCtor.new(line)
+      getCtorActions().add(a)
+    end
+
+    def add_line_before(line)  
+      a = AddLineBeforeCtor.new(line)
+      getCtorActions().add(a)
+    end 
+  end
+ 
+  
+  
 
   class MethodMod < MethodModification
     def initialize(matcher)
@@ -196,7 +217,7 @@ module Hacksaw
       elsif params.include? :field or params.include? :fields then
         modify_fields(params,&blk)
       elsif params.include? :constructor or params.include? :constructors then
-        puts "Not implemented bro!"
+        modify_ctors(params,&blk)
       end  
     end
 
@@ -236,6 +257,28 @@ module Hacksaw
       addMethodModification(m)
     end
 
+    
+     def modify_ctors(params)
+      if params.include? :constructor then
+        ctors = params[:constructor]
+      elsif params.include? :constructors then
+        ctors = params[:constructors]
+      else
+        raise "No constructor(s) specified to modify"
+      end
+      
+      matcher = case ctors
+        when String then RubyCtorMatcher.new { |c| c.getName() == ctors}
+        when Regexp then RubyCtorMatcher.new { |c| (c.getName() =~ ctors) != nil }
+        when Array  then RubyCtorMatcher.new { |c| ctors.include?(c.getName()) }
+        else RubyCtorMatcher.new { |c| false }  
+      end
+      m = CtorMod.new(matcher)
+      
+      yield(m) if block_given?
+      addCtorModification(m)
+    end
+    
     def modify_fields(params)
       if params.include? :field then
         fields = params[:field]
@@ -283,6 +326,19 @@ module Hacksaw
       @blk.call(m)
     end
   end
+  
+  class RubyCtorMatcher
+    include CtorMatcher
+    attr_accessor :blk
+    def initialize(&blk)
+      @blk = blk
+    end
+
+    def match(m)
+      @blk.call(m)
+    end
+  end
+ 
  
   class RubyFieldMatcher
     include FieldMatcher
@@ -368,8 +424,62 @@ module Hacksaw
     end
   end
             
+  class AddLineBeforeMethod 
+    include MethodAction
+    attr_accessor :line
+    def initialize(line) 
+      super()
+      @line = line
+    end
+    
+    def exec(m)
+      begin
+        m.insertBefore(line)
+      rescue
+        puts "Busted!"
+      end
+    end
+  end
+
+  
   class AddLineAfterMethod 
     include MethodAction
+    attr_accessor :line
+    def initialize(line) 
+      super()
+      @line = line
+    end
+    
+    def exec(m)
+      begin
+        m.insertAfter(line)
+      rescue
+        puts "Busted!"
+      end
+    end
+  end
+
+
+  class AddLineBeforeCtor 
+    include CtorAction
+    attr_accessor :line
+    def initialize(line) 
+      super()
+      @line = line
+    end
+    
+    def exec(m)
+      begin
+        m.insertBefore(line)
+      rescue
+        puts "Busted!"
+      end
+    end
+  end
+
+  
+  class AddLineAfterCtor 
+    include CtorAction
     attr_accessor :line
     def initialize(line) 
       super()
@@ -446,22 +556,6 @@ module Hacksaw
   end
 
   
-  class AddLineBeforeMethod 
-    include MethodAction
-    attr_accessor :line
-    def initialize(line) 
-      super()
-      @line = line
-    end
-    
-    def exec(m)
-      begin
-        m.insertBefore(line)
-      rescue
-        puts "Busted!"
-      end
-    end
-  end
   
   def modify_classes(params)
     if params.include? :class then
