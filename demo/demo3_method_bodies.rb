@@ -21,6 +21,7 @@ modify :classes=>/com.quadcs.hacksaw.demo.[FB][a-z]+/ do |c|
 end
 
 b = com.quadcs.hacksaw.demo.Bar.new()
-puts "MyNewField = #{b.mynewfield}"
+#puts "MyNewField = #{b.mynewfield}"
+# I really wish these could be lowercase...
 puts b.getFoo()
 puts b.getFoobar()

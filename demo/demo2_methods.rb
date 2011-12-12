@@ -37,4 +37,6 @@ puts account.secret
 puts "The Swiss bank account number is : #{account.generateSwissAccountNumber(123)}"
 account.accountNumber = "DAVESACCT"
 puts "The Swiss bank account number is : #{account.generateSwissAccountNumber(123)}"
+account.secret=200
 
+puts "The Swiss bank account number is : #{account.generateSwissAccountNumber(123)}"
