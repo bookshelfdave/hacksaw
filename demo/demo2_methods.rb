@@ -9,6 +9,11 @@ include Hacksaw
 
 #disable_hacksaw
 #show_matches_enable
+
+
+
+
+
 modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
     c.add_field 'public int secret = 99;'  
     
@@ -27,9 +32,12 @@ modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
     c.add_method '
       public String generateSwissAccountNumber(int salt) { 
         return accountNumber + "." + secret + "." + salt; 
-      }'    
+      }#'    
     #c.save_to("hacksaw")
 end
+
+
+
 
 account = com.quadcs.hacksaw.demo.DemoAccount.new("abcd")
 puts account.secret
@@ -40,3 +48,12 @@ puts "The Swiss bank account number is : #{account.generateSwissAccountNumber(12
 account.secret=200
 
 puts "The Swiss bank account number is : #{account.generateSwissAccountNumber(123)}"
+
+
+#modify :classes=>/.*DemoAccount/ do |c|
+#  c.modify :method=>"isValidAccount" do |m|
+#    m.replace_body "return true;"
+#  end
+#end
+#account = com.quadcs.hacksaw.demo.DemoAccount.new("abcd")
+#puts account.isValidAccount()

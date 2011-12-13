@@ -25,5 +25,6 @@ public interface MethodAction {
 //	}
 	
 
-	public void exec(CtMethod c);                    
+	public void exec(CtMethod c);
+
 }

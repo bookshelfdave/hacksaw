@@ -191,9 +191,15 @@ module Hacksaw
       getMethodActions().add(a)
     end
 
-    def add_callback_before(params,&blk)
+    def add_ruby_before(params,&blk)
       a = AddCallbackBeforeMethod.new(params,&blk)
       getMethodActions().add(a)
+    end
+    
+    
+    def replace_body_with_ruby(params)
+      cmb = ReplaceMethodBodyWithCallback.new(params,&blk)
+      getMethodActions().add(cmb)
     end
     
     def add_line_before(line)  
@@ -217,7 +223,7 @@ module Hacksaw
       getMethodActions().add(m)
     end
     
-    def change_body(params)
+    def replace_body(params)
       cmb = ChangeMethodBody.new(params)
       getMethodActions().add(cmb)
     end
@@ -456,17 +462,53 @@ module Hacksaw
   class AddCallbackBeforeMethod
     include MethodAction
     attr_accessor :blk
+    attr_accessor :paramtomodify
     
-    def initialize(params, &blk)
-      @params = params
+    def initialize(paramtomodify, &blk)
+      @paramtomodify = paramtomodify
       @blk = blk
     end
     
     def exec(m)
       p = RProcStub.new(@params,@blk)            
-      id = HacksawMain.registerMethodCallback(p)      
-      #m.insertBefore("System.out.println(\"FOO\");");     
-      m.insertBefore("com.quadcs.hacksaw.HacksawMain.getMethodCallback(#{id}).call($args);")
+      id = HacksawMain.registerMethodCallback(p)            
+      ptypes = m.getParameterTypes()
+      cast = ptypes[@paramtomodify].getName()
+      m.insertBefore("$#{@paramtomodify+1} = (#{cast})com.quadcs.hacksaw.HacksawMain.getMethodCallback(#{id}).call($args);")
+    end
+  end
+
+#  class ReplaceMethodBodyWithCallback
+#    include MethodAction
+#    attr_accessor :blk
+#    attr_accessor :paramtomodify
+#    
+#    def initialize(paramtomodify, &blk)
+#      @paramtomodify = paramtomodify
+#      @blk = blk
+#    end
+#    
+#    def exec(m)
+#      p = RProcStub.new(@params,@blk)            
+#      id = HacksawMain.registerMethodCallback(p)      
+#      #m.insertBefore("System.out.println(\"FOO\");");
+#      
+#      puts "$1 = ($sig[1])com.quadcs.hacksaw.HacksawMain.getMethodCallback(#{id}).call($args);"
+#      m.replaceBody("$_ = (String)com.quadcs.hacksaw.HacksawMain.getMethodCallback(#{id}).call($args);")
+#    end
+#  end
+
+  
+  class ChangeMethodBody
+    include MethodAction
+    attr_accessor :newbody
+    def initialize(newbody)
+      super()
+      @newbody = newbody
+    end
+    
+    def exec(m)
+      m.setBody(@newbody)
     end
   end
   

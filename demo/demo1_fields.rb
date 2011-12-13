@@ -10,12 +10,20 @@ include Hacksaw
 #disable_hacksaw
 #show_matches_enable
 
+
+
+
+
 modify :classes=>/.*\.DemoAccount/ do |c|
     c.add_field 'public boolean active = false;'
     c.modify :field=>"accountNumber" do |f|
       f.change_modifiers [:public]
     end
 end
+
+
+
+
 
 
 account = com.quadcs.hacksaw.demo.DemoAccount.new("abcd")

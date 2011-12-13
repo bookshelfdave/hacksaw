@@ -10,8 +10,10 @@ include Hacksaw
 #disable_hacksaw
 #show_matches_enable
 
+
+
+
 modify :classes=>/com.quadcs.hacksaw.demo.[FB][a-z]+/ do |c| 
-  c.add_field 'public String mynewfield = "Goodbye world";'    
   
   c.modify :method=>/getFoo/ do |m|        
       m.modify_method_calls :classname=>"java.lang.String",:methodname=>"toUpperCase" do
@@ -20,8 +22,10 @@ modify :classes=>/com.quadcs.hacksaw.demo.[FB][a-z]+/ do |c|
   end      
 end
 
+
+
 b = com.quadcs.hacksaw.demo.Bar.new()
-#puts "MyNewField = #{b.mynewfield}"
+
 # I really wish these could be lowercase...
 puts b.getFoo()
 puts b.getFoobar()
