@@ -91,7 +91,6 @@ public class HacksawMain implements ClassFileTransformer {
         }
         if(!started) {
             started = true;
-            System.out.println("Adding system classpath!");
             
             ClassPool cp = ClassPool.getDefault();
           

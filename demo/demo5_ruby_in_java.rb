@@ -11,8 +11,10 @@ include Hacksaw
 #show_matches_enable
 modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
     c.modify :method=>"getBetterAccountNumber" do |m|                          
-      m.add_callback_before ["$1"] do |x|
-        puts "This is a Ruby block in your Java method: #{x[0]} <<<<"
+      m.add_callback_before ["$1"] do |prefix,suffix|
+        puts "Ruby in your Java!!"
+        puts "Prefix in Ruby=#{prefix}"
+        puts "Suffix in Ruby=#{suffix}"
       end
     end    
 end
@@ -20,5 +22,5 @@ end
   
 
 account = com.quadcs.hacksaw.demo.DemoAccount.new("1234")
-puts account.getBetterAccountNumber("Mike Smith")
+puts account.getBetterAccountNumber(">>>","<<<")
 puts "Finished"

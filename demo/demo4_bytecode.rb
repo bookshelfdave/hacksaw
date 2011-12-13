@@ -12,12 +12,12 @@ include Hacksaw
 modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
     c.modify :method=>"deposit" do |m|                          
 	# actual, this just shows the opcodes for now
-        m.show_bytecode 
+        #m.show_bytecode 
 
         # this replaces ALL exceptions thrown with a NOP *and* a POP      
         m.map_bytecode do |bytes,op|         
-          op == "athrow" ? 0 : bytes          
-        end        
+          op == "athrow" ? 0 : bytes
+	end
     end    
     #c.save_to("hacksaw")
 end

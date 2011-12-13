@@ -41,8 +41,8 @@ public final class DemoAccount {
         return accountNumber;
     }
     
-    public String getBetterAccountNumber(String s) {
-        return s;
+    public String getBetterAccountNumber(String prefix, String suffix) {
+        return prefix + accountNumber + suffix;
     }
 
     @Test

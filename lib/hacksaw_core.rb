@@ -116,7 +116,8 @@ module Hacksaw
     
     def call(params)
       # TODO: No params being called yet
-      @blk.call(params)
+      
+      @blk.call(*params)
     end
   end
   
