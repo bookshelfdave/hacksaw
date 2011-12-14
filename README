@@ -1,9 +1,8 @@
 Hello -
 
-  This project is currently a prototype! 
+  This project is currently a prototype! I'm just trying to get my ideas together in one place.
 
 But, the idea is to have something like this in JRuby:
-
 
 modify :classes=>/com\.quadcs\.hacksaw\.demo\.DemoAccount/ do |c|
     c.add_field 'public int z = 0;'  
@@ -22,7 +21,7 @@ end
 # Append this to the JVM options when JRuby is started:
 # -J-javaagent:/path/to/Hacksaw.jar
 
-
+See the demo directory! 
 
 Cheers!
 Dave
