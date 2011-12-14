@@ -19,6 +19,9 @@ modify :classes=>/com.quadcs.hacksaw.demo.DemoAccount/ do |c|
       # needs some more work
       # that 1 right there tells hacksaw that we are changing
       # parameter 1 via the return value of this block.
+      # NOTE: This example ONLY works at runtime
+      # The bytecode for the ruby block doesn't actually get
+      # inserted into the classfile
       m.add_ruby_before 1 do |prefix,suffix|
         puts "Ruby in your Java!!"
         puts "Prefix in Ruby=#{prefix}"
